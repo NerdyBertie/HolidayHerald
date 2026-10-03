@@ -1,5 +1,4 @@
-# HolidayHerald
-A WoW addon that tracks holidays and their secrets, vendors, toys, mounts, and more
+
 
 <p align=center><img width="254" height="254" alt="HolidayHerald-icon-512" src="https://github.com/user-attachments/assets/cf2cd51f-cefe-4cfd-b766-85edaf6d1c80" /></p>
 
