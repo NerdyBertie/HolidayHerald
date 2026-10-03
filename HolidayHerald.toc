@@ -1,0 +1,26 @@
+## Interface: 120100
+## Title: Holiday Herald
+## Notes: Pops up a themed reminder of current and upcoming holidays, what you can still collect, tips, and secrets.
+## Author: NerdyBertie
+## Category: NerdyBertie
+## Version: @project-version@
+## IconTexture: Interface\AddOns\HolidayHerald\Media\icon
+## SavedVariables: HolidayHeraldDB
+## SavedVariablesPerCharacter: HolidayHeraldCharDB
+## AddonCompartmentFunc: HolidayHerald_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: HolidayHerald_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: HolidayHerald_OnAddonCompartmentLeave
+## X-Curse-Project-ID: 1723649
+## X-WoWI-ID: 27233
+## X-Wago-ID: ZKbqAk61
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+Data\Brewfest.lua
+Data\HallowsEnd.lua
+Data\DarkmoonFaire.lua
+Data\PiratesDay.lua
+HolidayHerald.lua
