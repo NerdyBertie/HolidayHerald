@@ -272,6 +272,28 @@ local function IsWeekly(title)
     return false
 end
 
+-- Expansion names to look for in an event's calendar description.
+-- Longest names first, so "Wrath of the Lich King" wins over shorter matches.
+local EXPANSIONS = {
+    "Wrath of the Lich King", "Mists of Pandaria", "Warlords of Draenor",
+    "Battle for Azeroth", "The Burning Crusade", "The War Within",
+    "Shadowlands", "Dragonflight", "Cataclysm", "Midnight", "Legion",
+}
+
+local function HolidayDescription(monthOffset, day, index)
+    if not C_Calendar.GetHolidayInfo then return nil end
+    local ok, info = pcall(C_Calendar.GetHolidayInfo, monthOffset, day, index)
+    if not ok or type(info) ~= "table" then return nil end
+    return info.description
+end
+
+local function FindExpansion(text)
+    if not text then return nil end
+    for _, name in ipairs(EXPANSIONS) do
+        if text:find(name, 1, true) then return name end
+    end
+end
+
 ---------------------------------------------------------------------------
 -- Calendar scan
 ---------------------------------------------------------------------------
@@ -303,6 +325,13 @@ local function ScanCalendar()
                     isShort  = isShort,
                     key      = ev.title .. "@" .. startKey,
                 }
+                local item = items[#items]
+                if item.category == "weekly" then
+                    item.description = HolidayDescription(monthOffset, d.monthDay, i)
+                    if ev.title:lower():find("timewalking", 1, true) then
+                        item.expansion = FindExpansion(item.description) or FindExpansion(ev.title)
+                    end
+                end
             end
         end
     end
@@ -760,13 +789,21 @@ local function Render(items)
         y = PlaceHeader("Weekly Events", y)
         for _, item in ipairs(weekly) do
             local label
+            local title = item.title
+            if item.expansion then
+                title = title .. Color(DEFAULT_COLORS.main, " (" .. item.expansion .. ")")
+            end
             if item.daysAway == 0 then
                 local ends = FormatDate(item.endTime)
-                label = Color("33FF33", "Now: ") .. Color(SOFT, item.title .. (ends and (" (ends " .. ends .. ")") or ""))
+                label = Color("33FF33", "Now: ") .. Color(SOFT, title .. (ends and (" (ends " .. ends .. ")") or ""))
             else
-                label = Color("FFD100", "In " .. item.daysAway .. " days: ") .. Color(SOFT, item.title)
+                label = Color("FFD100", "In " .. item.daysAway .. " days: ") .. Color(SOFT, title)
             end
-            y = y - PlaceLine(popup, { text = label }, 20, y, width - 8) - 2
+            local tooltip
+            if item.description and item.description ~= "" then
+                tooltip = TextTooltip(item.title, DEFAULT_COLORS, item.description)
+            end
+            y = y - PlaceLine(popup, { text = label, tooltip = tooltip }, 20, y, width - 8) - 2
         end
     end
 
@@ -1048,9 +1085,26 @@ local PRESETS = {
 local settingObjects = {}
 local settingsCategory
 
+-- Which preset matches the current settings, or "custom" if none do
+local function CurrentPreset()
+    for _, name in ipairs({ "all", "visuals", "quiet" }) do
+        local matches = true
+        for key, default in pairs(DB_DEFAULTS) do
+            if type(default) == "boolean" and key ~= "showMinimap" then
+                local expected = PRESETS[name][key]
+                if expected == nil then expected = true end
+                if HolidayHeraldDB[key] ~= expected then matches = false break end
+            end
+        end
+        if matches then return name end
+    end
+    return "custom"
+end
+
 local function ApplyPreset(name)
+    if not PRESETS[name] then return end
     for key, default in pairs(DB_DEFAULTS) do
-        if type(default) == "boolean" then
+        if type(default) == "boolean" and key ~= "showMinimap" then
             local value = PRESETS[name][key]
             if value == nil then value = true end
             if settingObjects[key] then
@@ -1104,9 +1158,24 @@ local function BuildSettings()
     end
 
     Header("Quick presets")
-    Button("All on", "Use", function() ApplyPreset("all") end, "Everything on, sounds included.")
-    Button("Visuals only", "Use", function() ApplyPreset("visuals") end, "All messages and toasts, no sounds.")
-    Button("Quiet", "Use", function() ApplyPreset("quiet") end, "Just the popup and chat lines. No alerts or toasts.")
+    do
+        -- A dropdown that shows the preset currently in use ("Custom" once you
+        -- change individual settings), and applies a preset when you pick one.
+        local setting = Settings.RegisterProxySetting(category, "HolidayHerald_preset", "string",
+            "Preset", "all", CurrentPreset, function(value) ApplyPreset(value) end)
+        local function GetOptions()
+            local container = Settings.CreateControlTextContainer()
+            container:Add("all", "All on", "Everything on, sounds included.")
+            container:Add("visuals", "Visuals only", "All messages and toasts, no sounds.")
+            container:Add("quiet", "Quiet", "Just the popup and chat lines. No alerts or toasts.")
+            if CurrentPreset() == "custom" then
+                container:Add("custom", "Custom", "You've changed individual settings below.")
+            end
+            return container:GetData()
+        end
+        CreateDropdown(category, setting, GetOptions,
+            "Shows which preset is in use. Pick one to apply it. Changing settings below switches this to Custom.")
+    end
 
     Header("Popup")
     Checkbox("showPopup", "Show popup for new holidays",
