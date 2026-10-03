@@ -113,8 +113,8 @@ HH.Holidays.HallowsEnd = {
         },
         {
             teaser = "Secret: four sisters left their hats behind...",
-            reveal = "The daily quest Under the Crooked Tree rewards Hag's Belongings, which can contain "
-                  .. "one of four witch hats.",     -- VERIFY quest location
+            reveal = "The daily quest Under the Crooked Tree, in Bradensbrook, Val'sharah (Legion) at 35.0, 56.0, "
+                  .. "rewards Hag's Belongings, which can contain one of four witch hats.",
             transmog = { 139133, 139134, 139135, 139136 },
         },
     },
