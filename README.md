@@ -10,7 +10,7 @@
 Built after missing Pirates' Day (and the Jolly Roger) five days after hitting exalted. Never again!
 
 ## Features
-
+- **Now with ItemWatch support!** If a holiday asks you to buy something, like the profession quest supplies at the Darkmoon Faire or the flour and milk for Day of the Dead, you can send it straight to ItemWatch: Ctrl-click the shopping line on the holiday card to add the whole list in one go, with the amounts added on top of any goals you've already set! Grab ItemWatch from CurseForge/Wago/Wowinterface/WoWUp to get this feature!!
 - **Themed holiday cards.** Each holiday gets its own colors and its calendar icon.
 - **Collection tracking.** Toys, mounts, pets, and transmog are checked against your collection. Collected items gray out, so you only see what you're missing.
 - **Holiday boss info.** See every drop at a glance, plus whether your account's best daily roll is still available and whether this character has done the boss today.
