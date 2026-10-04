@@ -796,7 +796,7 @@ local lineCount, headerCount, cardCount = 0, 0, 0
 
 local function ReleaseAll()
     for i = 1, lineCount do linePool[i]:Hide() end
-    for i = 1, headerCount do headerPool[i].text:Hide(); headerPool[i].rule:Hide() end
+    for i = 1, headerCount do headerPool[i].text:Hide(); headerPool[i].hint:Hide(); headerPool[i].rule:Hide() end
     for i = 1, cardCount do cardPool[i]:Hide() end
     lineCount, headerCount, cardCount = 0, 0, 0
 end
@@ -878,14 +878,20 @@ local function PlaceLine(parent, spec, x, y, width)
     return height
 end
 
-local function PlaceHeader(text, y)
+local function PlaceHeader(text, y, hint)
     headerCount = headerCount + 1
     local h = headerPool[headerCount]
     if not h then
         h = { text = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal"),
+              hint = popup:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall"),
               rule = popup:CreateTexture(nil, "ARTWORK") }
         headerPool[headerCount] = h
     end
+    -- Optional small hint on the right side of the header, like "Hover any line for details"
+    h.hint:ClearAllPoints()
+    h.hint:SetPoint("BOTTOMRIGHT", popup, "TOPRIGHT", -22, y - 14)
+    h.hint:SetText(hint or "")
+    h.hint:SetShown(hint ~= nil)
     local r, g, b = Hex(DEFAULT_COLORS.main)
     h.text:ClearAllPoints()
     h.text:SetPoint("TOPLEFT", 20, y)
@@ -1015,15 +1021,17 @@ local function Render(items)
         end
     end
 
+    local hint = Color(GRAY, "Hover any line for details")
     if #holidays > 0 then
-        y = PlaceHeader("Holidays", y)
+        y = PlaceHeader("Holidays", y, hint)
+        hint = nil
         for _, item in ipairs(holidays) do
             y = PlaceCard(item, y, width)
         end
     end
 
     if #micro > 0 then
-        y = PlaceHeader("Micro-holidays", y)
+        y = PlaceHeader("Micro-holidays", y, hint)
         for _, item in ipairs(micro) do
             y = PlaceCard(item, y, width)
         end
@@ -1053,11 +1061,6 @@ local function Render(items)
 
     if #holidays == 0 and #micro == 0 and (#weekly == 0 or not HolidayHeraldDB.showWeekly) then
         y = y - PlaceLine(popup, { text = Color(SOFT, "No holidays or events in the next " .. HolidayHeraldDB.lookahead .. " days.") }, 20, y, width - 8)
-    end
-
-    if #holidays > 0 or #micro > 0 then
-        y = y - 4
-        y = y - PlaceLine(popup, { text = Color(GRAY, "Hover any line for details.") }, 20, y, width - 8)
     end
 
     popup:SetHeight(-y + 18)

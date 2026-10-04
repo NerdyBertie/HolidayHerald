@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.1.1
+
+### Improvements
+- The "Hover any line for details" hint now sits at the top of the popup, next to the Holidays heading.
+
 ## v1.1.0
 
 ### New
