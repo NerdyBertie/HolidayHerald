@@ -271,7 +271,7 @@ end
 ---------------------------------------------------------------------------
 -- Data prep: normalize lists so every entry is a table with a kind
 ---------------------------------------------------------------------------
-local LIST_KINDS = { toys = "toy", pets = "pet", transmog = "transmog", decor = "decor", reminders = "reminder", achievements = "achievement" }
+local LIST_KINDS = { mounts = "mount", toys = "toy", pets = "pet", transmog = "transmog", decor = "decor", reminders = "reminder", achievements = "achievement" }
 
 local function Normalize(list, kind)
     local out = {}
@@ -459,12 +459,13 @@ end
 local COUNT_LABELS = {
     achievements = { label = "Achievements" },
     reminders    = { label = "Also on sale", unit = "item", units = "items" },
+    mounts       = { label = "Mounts" },
     toys         = { label = "Toys" },
     pets         = { label = "Pets" },
     transmog     = { label = "Transmog" },
     decor        = { label = "Housing decor", unit = "piece", units = "pieces" },
 }
-local COUNT_ORDER = { "achievements", "reminders", "toys", "pets", "transmog", "decor" }
+local COUNT_ORDER = { "achievements", "reminders", "mounts", "toys", "pets", "transmog", "decor" }
 
 local DONE_ICON = "|TInterface\\RaidFrame\\ReadyCheck-Ready:12:12|t "
 
@@ -776,12 +777,21 @@ popup:SetBackdrop({
     insets = { left = 11, right = 12, top = 12, bottom = 11 },
 })
 popup:SetMovable(true)
+popup:SetClampedToScreen(true)
 popup:EnableMouse(true)
 popup:RegisterForDrag("LeftButton")
 popup:SetScript("OnDragStart", popup.StartMoving)
 popup:SetScript("OnDragStop", popup.StopMovingOrSizing)
 popup:Hide()
 tinsert(UISpecialFrames, "HolidayHeraldFrame")
+
+-- Puts the popup back in its default spot (top middle of the screen)
+local function ResetPopupPosition()
+    popup:StopMovingOrSizing()
+    popup:ClearAllPoints()
+    popup:SetPoint("CENTER", 0, 150)
+    if popup.SetUserPlaced then popup:SetUserPlaced(false) end
+end
 
 local popupTitle = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 popupTitle:SetPoint("TOP", 0, -18)
@@ -909,7 +919,9 @@ end
 
 local function NewCard()
     local c = CreateFrame("Frame", nil, popup, "BackdropTemplate")
-    c:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    -- A 2-pixel border: 1-pixel borders can vanish on some sides at certain
+    -- UI scales, because they land between screen pixels
+    c:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     c.icon = c:CreateTexture(nil, "ARTWORK")
     c.icon:SetSize(28, 28)
     c.icon:SetPoint("TOPLEFT", 10, -10)
@@ -961,7 +973,7 @@ local function CardIcon(item)
     return item.icon or ICONS.fallback
 end
 
-local function PlaceCard(item, y, width)
+local function PlaceCard(item, y, width, x)
     cardCount = cardCount + 1
     local c = cardPool[cardCount]
     if not c then
@@ -970,7 +982,7 @@ local function PlaceCard(item, y, width)
     end
     local colors = (HolidayHeraldDB.showThemes and item.data.colors) or DEFAULT_COLORS
     c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", 16, y)
+    c:SetPoint("TOPLEFT", x or 16, y)
     c:SetWidth(width)
     c:SetBackdropColor(Hex(colors.card))
     c:SetBackdropBorderColor(Hex(colors.border or colors.main))
@@ -1003,12 +1015,32 @@ end
 local QueueRedraw   -- defined below
 local retryCount = 0
 
+local COLUMN_GAP = 12
+local TWO_COLUMN_AT = 3      -- this many cards or more switches to two columns
+
+-- Lays cards out in one column, or two balanced columns (each card goes into
+-- whichever column is currently shorter). Returns the y below the lowest card.
+local function PlaceCards(list, y, columns, columnWidth)
+    if columns == 1 then
+        for _, item in ipairs(list) do
+            y = PlaceCard(item, y, columnWidth)
+        end
+        return y
+    end
+    local columnY = { y, y }
+    for _, item in ipairs(list) do
+        local col = (columnY[2] > columnY[1]) and 2 or 1      -- y is negative: larger = shorter column
+        local x = 16 + (col - 1) * (columnWidth + COLUMN_GAP)
+        columnY[col] = PlaceCard(item, columnY[col], columnWidth, x)
+    end
+    return math.min(columnY[1], columnY[2])
+end
+
 local function Render(items)
     ReleaseAll()
     lastItems = items
     pendingData = false
     local y = -46
-    local width = POPUP_WIDTH - 32
 
     local holidays, weekly, micro = {}, {}, {}
     for _, item in ipairs(items) do
@@ -1021,20 +1053,22 @@ local function Render(items)
         end
     end
 
+    -- Three or more cards: go wide, with two columns of cards
+    local columns = (#holidays + #micro >= TWO_COLUMN_AT) and 2 or 1
+    local columnWidth = POPUP_WIDTH - 32
+    popup:SetWidth(columns * columnWidth + (columns - 1) * COLUMN_GAP + 32)
+    local width = popup:GetWidth() - 32
+
     local hint = Color(GRAY, "Hover any line for details")
     if #holidays > 0 then
         y = PlaceHeader("Holidays", y, hint)
         hint = nil
-        for _, item in ipairs(holidays) do
-            y = PlaceCard(item, y, width)
-        end
+        y = PlaceCards(holidays, y, columns, columnWidth)
     end
 
     if #micro > 0 then
         y = PlaceHeader("Micro-holidays", y, hint)
-        for _, item in ipairs(micro) do
-            y = PlaceCard(item, y, width)
-        end
+        y = PlaceCards(micro, y, columns, columnWidth)
     end
 
     if #weekly > 0 and HolidayHeraldDB.showWeekly then
@@ -1417,14 +1451,19 @@ local function GetBrandCategory()
     footer:SetJustifyH("LEFT")
     footer:SetText("Find them all on CurseForge, Wago, and WoWInterface. Pick an installed one from the list on the left to see its settings.")
 
-    -- Refresh the "installed" marks each time the page is shown
-    panel:SetScript("OnShow", function()
+    -- Fill in the list, with "installed" marks. This runs right away, and again
+    -- every time the page is shown, since other addons may load after this one.
+    local function RefreshList()
         for i, line in ipairs(lines) do
             local loaded = C_AddOns and C_AddOns.IsAddOnLoaded(line.addon.folder)
             line:SetText(i .. ". " .. line.addon.name
                 .. (loaded and "  |cff33ff33(installed)|r" or ""))
         end
-    end)
+    end
+    RefreshList()
+    panel:SetScript("OnShow", RefreshList)
+    -- Start hidden so the first time the page is opened counts as "shown"
+    panel:Hide()
 
     local category = Settings.RegisterCanvasLayoutCategory(panel, "NerdyBertie")
     Settings.RegisterAddOnCategory(category)
@@ -1491,6 +1530,10 @@ local function BuildSettings()
             Settings.SetOnValueChangedCallback("HolidayHerald_showMinimap", OnChanged)
         end
     end
+    Button("Popup position", "Reset", function()
+        ResetPopupPosition()
+        Print("popup moved back to its default spot.")
+    end, "Move the Holiday Herald popup back to the middle of the screen.")
     Checkbox("showThemes", "Holiday color themes", "Give each holiday card its own colors.")
     Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly Events.")
 
@@ -1602,6 +1645,9 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
         ShowPopup()
     elseif cmd == "options" or cmd == "settings" or cmd == "config" then
         OpenSettings()
+    elseif cmd == "resetpos" then
+        ResetPopupPosition()
+        Print("popup moved back to its default spot.")
     elseif cmd == "weekly" then
         HolidayHeraldDB.showWeekly = not HolidayHeraldDB.showWeekly
         Print("weekly events " .. (HolidayHeraldDB.showWeekly and "shown." or "hidden."))
@@ -1637,6 +1683,6 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
             if data then ShortAlert({ title = data.name, data = data, daysAway = 0 }) end
         end
     else
-        Print("commands: /herald, /herald options, /herald weekly, /herald debug on|off, /herald preview <holiday> [soon|done], /herald alert <holiday>, /herald reset")
+        Print("commands: /herald, /herald options, /herald resetpos, /herald weekly, /herald debug on|off, /herald preview <holiday> [soon|done], /herald alert <holiday>, /herald reset")
     end
 end

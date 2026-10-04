@@ -1,5 +1,21 @@
 # Holiday Herald
 
+## v1.2.0
+
+### New
+- Darkmoon Faire is now a full card: 31 achievements, 4 mounts, 19 toys, 22 pets, and 14 transmog pieces, each checked against your collection.
+- Mounts now get their own count line on holiday cards.
+- Three new Darkmoon Faire secrets.
+
+### Improvements
+- Darkmoon Faire tip: the WHEE! XP and reputation buff, the Darkmoon Top Hat, the Dance Dance Darkmoon toy, and the Blight Boar concert.
+- With three or more holiday cards, the popup switches to two side-by-side columns, so it doesn't get so tall.
+- The popup can't be dragged off screen anymore, and there's a new "Reset" button for its position in the settings (or type /herald resetpos).
+
+### Fixes
+- The Addon Workshop list in Options now always shows, no matter which NerdyBertie addon's settings you opened first.
+- Card borders no longer disappear on some sides at certain UI scales.
+
 ## v1.1.1
 
 ### Improvements
