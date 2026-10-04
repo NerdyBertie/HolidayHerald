@@ -14,6 +14,8 @@ HH.Holidays.Brewfest = {
         main   = "E3A43C",              -- amber
         accent = "F1D9A0",              -- wheat gold
         card   = "241E16",
+        border = "B87333",              -- copper keg
+        titleGradient = { "C47A1E", "E3A43C", "F6E7C1" },   -- dark ale -> amber -> foam
     },
 
     -- Meta line: holiday meta + the Violet Proto-Drake meta

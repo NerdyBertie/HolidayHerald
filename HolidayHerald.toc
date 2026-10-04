@@ -23,4 +23,15 @@ Data\Brewfest.lua
 Data\HallowsEnd.lua
 Data\DarkmoonFaire.lua
 Data\PiratesDay.lua
+Data\DayOfTheDead.lua
+Data\GreatGnomereganRun.lua
+Data\PilgrimsBounty.lua
+Data\Anniversary.lua
+Data\WinterVeil.lua
+Data\Midsummer.lua
+Data\LunarFestival.lua
+Data\LoveIsInTheAir.lua
+Data\Noblegarden.lua
+Data\ChildrensWeek.lua
+Data\DarkspearDash.lua
 HolidayHerald.lua

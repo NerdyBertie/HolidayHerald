@@ -12,6 +12,8 @@ HH.Holidays.HallowsEnd = {
         main   = "F07F2E",              -- pumpkin
         accent = "9B6BD6",              -- witchy purple
         card   = "1F1626",
+        border = "7CD13E",              -- fel green
+        titleGradient = { "7CD13E", "F07F2E", "9B6BD6" },   -- fel -> pumpkin -> purple
     },
 
     meta = {

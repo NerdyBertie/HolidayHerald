@@ -66,6 +66,39 @@ local function DarkHex(h, factor)
     return r * factor, g * factor, b * factor
 end
 
+-- Colors each letter along a list of color stops (for rainbow or gradient titles)
+local function GradientText(text, stops)
+    local letters = {}
+    for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do letters[#letters + 1] = char end
+    if #stops < 2 or #letters < 2 then return text end
+    local out = {}
+    for i, char in ipairs(letters) do
+        local pos = (i - 1) / (#letters - 1) * (#stops - 1)
+        local a = math.floor(pos) + 1
+        local b = math.min(a + 1, #stops)
+        local t = pos - (a - 1)
+        local r1, g1, b1 = tonumber(stops[a]:sub(1, 2), 16), tonumber(stops[a]:sub(3, 4), 16), tonumber(stops[a]:sub(5, 6), 16)
+        local r2, g2, b2 = tonumber(stops[b]:sub(1, 2), 16), tonumber(stops[b]:sub(3, 4), 16), tonumber(stops[b]:sub(5, 6), 16)
+        out[#out + 1] = ("|cff%02x%02x%02x%s|r"):format(
+            math.floor(r1 + (r2 - r1) * t), math.floor(g1 + (g2 - g1) * t), math.floor(b1 + (b2 - b1) * t), char)
+    end
+    return table.concat(out)
+end
+
+-- Alternates colors letter by letter (spaces don't use up a color), for stripes
+local function StripeText(text, stripes)
+    local out, index = {}, 0
+    for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+        if char == " " then
+            out[#out + 1] = char
+        else
+            index = index + 1
+            out[#out + 1] = "|cff" .. stripes[(index - 1) % #stripes + 1] .. char .. "|r"
+        end
+    end
+    return table.concat(out)
+end
+
 local function Color(hex, text)
     return "|cff" .. hex .. text .. "|r"
 end
@@ -87,6 +120,10 @@ end
 
 local function ItemName(entry)
     if entry.name then return entry.name end
+    if entry.achievement then
+        local _, name = GetAchievementInfo(entry.achievement)
+        return name or ("Achievement " .. entry.achievement)
+    end
     local name = entry.item and C_Item.GetItemNameByID(entry.item)
     return name or ("Item " .. tostring(entry.item))
 end
@@ -143,6 +180,12 @@ local function FirstAchievementInCategory(categoryName)
     end
 end
 
+-- A clickable item link, even if the item isn't cached yet
+local function ItemLink(id, name)
+    local _, link = C_Item.GetItemInfo(id)
+    return link or ("|cffffffff|Hitem:%d::::::::::::::|h[%s]|h|r"):format(id, name or ("Item " .. id))
+end
+
 local function OpenDungeonFinder()
     if PVEFrame_ShowFrame then
         pcall(PVEFrame_ShowFrame, "GroupFinderFrame", LFDParentFrame)
@@ -164,6 +207,7 @@ local function IsOwned(entry)
     if simulateOwned and entry.item and entry.kind ~= "decor" and entry.kind ~= "reminder" then
         return true
     end
+    if entry.achievement then return AchievementDone(entry.achievement) end
     if entry.reminderOnly or not entry.item then return nil end
 
     local kind = entry.kind
@@ -192,10 +236,17 @@ local pendingData = false     -- set when something checkable hasn't loaded yet
 -- Returns: owned, total checkable, reminders (can never be checked)
 -- Checkable items that haven't loaded yet count as not owned for now,
 -- and trigger a redraw once their data arrives.
+-- Entries can be marked faction = "Alliance" or "Horde"; others are skipped
+local function ForMyFaction(entry)
+    return not entry.faction or entry.faction == UnitFactionGroup("player")
+end
+
 local function CountOwned(list)
     local owned, total, reminders = 0, 0, 0
     for _, entry in ipairs(list) do
-        if entry.item and CHECKABLE[entry.kind] and not entry.reminderOnly then
+        if not ForMyFaction(entry) then
+            -- not for this character's faction
+        elseif entry.achievement or (entry.item and CHECKABLE[entry.kind] and not entry.reminderOnly) then
             total = total + 1
             local state = IsOwned(entry)
             if state == true then
@@ -220,7 +271,7 @@ end
 ---------------------------------------------------------------------------
 -- Data prep: normalize lists so every entry is a table with a kind
 ---------------------------------------------------------------------------
-local LIST_KINDS = { toys = "toy", pets = "pet", transmog = "transmog", decor = "decor", reminders = "reminder" }
+local LIST_KINDS = { toys = "toy", pets = "pet", transmog = "transmog", decor = "decor", reminders = "reminder", achievements = "achievement" }
 
 local function Normalize(list, kind)
     local out = {}
@@ -254,6 +305,7 @@ local function RequestAllItems()
     for _, data in pairs(HH.Holidays) do
         for field in pairs(LIST_KINDS) do RequestItems(data[field]) end
         if data.boss then RequestItems(data.boss.drops) end
+        RequestItems(data.shopping)
     end
 end
 
@@ -318,7 +370,7 @@ local function ScanCalendar()
                 items[#items + 1] = {
                     title    = ev.title,
                     data     = data,
-                    category = data and "holiday" or (IsWeekly(ev.title) and "weekly" or "micro"),
+                    category = (data and not data.micro) and "holiday" or (IsWeekly(ev.title) and "weekly" or "micro"),
                     daysAway = dayOffset,
                     endTime  = ev.endTime,
                     icon     = ev.iconTexture,
@@ -369,6 +421,7 @@ local function ListTooltip(title, list, colors, notes)
     return function(tt)
         tt:AddLine(title, Hex(colors.main))
         for _, entry in ipairs(list) do
+          if ForMyFaction(entry) then
             local name = ItemName(entry)
             local state = IsOwned(entry)
             if entry.kind == "pet" and entry.item and not simulateOwned then
@@ -391,6 +444,7 @@ local function ListTooltip(title, list, colors, notes)
             if entry.note then
                 tt:AddLine("   " .. entry.note, 0.72, 0.68, 0.61, true)
             end
+          end
         end
         for _, note in ipairs(notes or {}) do
             tt:AddLine(" ")
@@ -403,65 +457,104 @@ end
 -- Line builders for one holiday card
 ---------------------------------------------------------------------------
 local COUNT_LABELS = {
-    toys      = { label = "Toys",          noun = "collected",   one = "collected" },
-    pets      = { label = "Pets",          noun = "collected",   one = "collected" },
-    transmog  = { label = "Transmog",      noun = "appearances", one = "appearance" },
-    decor     = { label = "Housing decor", noun = "pieces",      one = "piece" },
-    reminders = { label = "Also on sale",  noun = "items",       one = "item" },
+    achievements = { label = "Achievements" },
+    reminders    = { label = "Also on sale", unit = "item", units = "items" },
+    toys         = { label = "Toys" },
+    pets         = { label = "Pets" },
+    transmog     = { label = "Transmog" },
+    decor        = { label = "Housing decor", unit = "piece", units = "pieces" },
 }
-local COUNT_ORDER = { "reminders", "toys", "pets", "transmog", "decor" }
+local COUNT_ORDER = { "achievements", "reminders", "toys", "pets", "transmog", "decor" }
 
+local DONE_ICON = "|TInterface\\RaidFrame\\ReadyCheck-Ready:12:12|t "
+
+-- Picks the achievement to open from a list: the first one not yet earned,
+-- or the first one if they're all done
+local function AchievementToOpen(list)
+    local first
+    for _, entry in ipairs(list or {}) do
+        if entry.achievement and ForMyFaction(entry) then
+            first = first or entry.achievement
+            if not AchievementDone(entry.achievement) then return entry.achievement end
+        end
+    end
+    return first
+end
+
+local function AchievementClick(id)
+    return function()
+        if not id then return end
+        if IsShiftKeyDown() then LinkAchievement(id) else OpenAchievement(id) end
+    end
+end
+
+-- Returns a count line spec, and whether that category is finished
 local function CountLine(holidayName, field, list, colors)
     local info = COUNT_LABELS[field]
     local owned, total, reminders = CountOwned(list)
-    local text, done
-
+    local right, done
     if total == 0 then
-        text = ("%s: %d %s"):format(info.label, reminders, reminders == 1 and info.one or info.noun)
+        right = reminders .. " " .. (reminders == 1 and (info.unit or "item") or (info.units or "items"))
         done = false
     else
-        text = ("%s: %d of %d %s"):format(info.label, owned, total, total == 1 and info.one or info.noun)
+        right = owned .. " of " .. total
         done = (owned == total and reminders == 0)
     end
-    text = text .. Color(GRAY, " (hover to see)")
-    if done then text = Color(GRAY, text) end
-
-    return {
-        icon = ICONS.collect,
-        text = text,
-        tooltip = ListTooltip(holidayName .. " " .. info.label:lower(), list, colors),
-    }, done
+    local spec = {
+        text = info.label,
+        right = Color(colors.main, right),
+        tooltip = ListTooltip(holidayName .. ": " .. info.label, list, colors),
+        doneLabel = info.label,
+    }
+    if field == "achievements" then
+        local target = AchievementToOpen(list)
+        spec.tooltip = ListTooltip(holidayName .. ": " .. info.label, list, colors,
+            { "Click: open in the achievement window. Shift-click: link it in chat." })
+        spec.onClick = AchievementClick(target)
+    end
+    return spec, done
 end
 
+-- The skill line IDs of this character's professions (cooking, fishing and
+-- archaeology included), for showing only the shopping items they need
+local function MyProfessionSkillLines()
+    local lines = {}
+    for _, index in ipairs({ GetProfessions() }) do
+        if index then
+            local skillLine = select(7, GetProfessionInfo(index))
+            if skillLine then lines[skillLine] = true end
+        end
+    end
+    return lines
+end
+
+-- Which shopping item a shift-click sends next, per holiday. Kept outside the
+-- card so redrawing the popup doesn't reset it.
+local shoppingNext = {}
+
+-- Builds the card's lines, grouped under small section headers
 local function BuildLines(item)
     local data = item.data
     local colors = (HolidayHeraldDB.showThemes and data.colors) or DEFAULT_COLORS
     local name = data.name or item.title
-    local specs = {}
-    local allDone = true
+    local toGet, done, howTo, secrets = {}, {}, {}, {}
+    local doneTooltips = {}
     local hasGoals = false
 
-    -- Meta achievement line
+    -- Holiday meta achievement
     if HolidayHeraldDB.showMeta and data.meta and data.meta.holidayMeta then
         local metaID, tripID = data.meta.holidayMeta, data.meta.strangeTrip
         hasGoals = true
-        local done = AchievementDone(metaID)
-        local text
-        if done then
-            text = Color(GRAY, "Counts toward the Violet Proto-Drake meta. All done! Grats!")
-        else
-            allDone = false
-            text = "Counts toward " .. Color(colors.accent, AchievementName(tripID or 2144))
-                .. ". See what you still need: " .. Color(colors.main, AchievementName(metaID))
-        end
-        specs[#specs + 1] = {
-            icon = ICONS.meta,
-            text = text,
+        local spec = {
+            text = "Drake meta",
+            right = Color(colors.main, AchievementName(metaID)),
             tooltip = function(tt)
                 tt:AddLine(AchievementName(metaID), Hex(colors.main))
-                tt:AddLine("Click: open this holiday's meta achievement", 1, 1, 1)
-                if tripID then tt:AddLine("Ctrl-click: open " .. AchievementName(tripID), 1, 1, 1) end
-                tt:AddLine("Shift-click: link it in chat", 1, 1, 1)
+                tt:AddLine("This holiday's part of " .. AchievementName(tripID or 2144) .. " (Violet Proto-Drake).", 1, 1, 1, true)
+                tt:AddLine(" ")
+                tt:AddLine("Click: open it", 0.72, 0.68, 0.61)
+                if tripID then tt:AddLine("Ctrl-click: open " .. AchievementName(tripID), 0.72, 0.68, 0.61) end
+                tt:AddLine("Shift-click: link it in chat", 0.72, 0.68, 0.61)
             end,
             onClick = function()
                 if IsShiftKeyDown() then LinkAchievement(metaID)
@@ -469,37 +562,39 @@ local function BuildLines(item)
                 else OpenAchievement(metaID) end
             end,
         }
+        if AchievementDone(metaID) then
+            done[#done + 1] = "Drake meta"
+            doneTooltips[#doneTooltips + 1] = spec
+        else
+            toGet[#toGet + 1] = spec
+        end
     end
 
-    -- Browse a whole achievement category (for holidays without a meta)
+    -- Browse an achievement category (holidays without a meta)
     if data.achievementCategory then
-        specs[#specs + 1] = {
+        howTo[#howTo + 1] = {
             icon = ICONS.meta,
-            text = data.achievementCategory .. " achievements" .. Color(GRAY, " (click to browse)"),
+            text = "Browse all " .. data.achievementCategory .. " achievements",
             tooltip = function(tt)
                 tt:AddLine(data.achievementCategory .. " achievements", Hex(colors.main))
                 tt:AddLine("Click to open the achievement window on this holiday's list.", 1, 1, 1, true)
             end,
             onClick = function()
                 local first = FirstAchievementInCategory(data.achievementCategory)
-                if first then
-                    OpenAchievement(first)
-                else
-                    Print("couldn't find the " .. data.achievementCategory .. " achievement list.")
-                end
+                if first then OpenAchievement(first)
+                else Print("couldn't find the " .. data.achievementCategory .. " achievement list.") end
             end,
         }
     end
 
-    -- Holiday boss line
+    -- Holiday boss
     if data.boss then
         local boss = data.boss
         hasGoals = true
         local owned, total, reminders = CountOwned(boss.drops)
-        local done = (total > 0 and owned == total and reminders == 0)
-        if not done then allDone = false end
+        local bossDone = (total > 0 and owned == total and reminders == 0)
 
-        local status = ""
+        local status
         if boss.lfg and GetLFGDungeonRewards then
             local doneToday = GetLFGDungeonRewards(boss.lfg)
             local now = GetServerTime()
@@ -510,12 +605,8 @@ local function BuildLines(item)
             status = "\n" .. Color(SOFT, "Best roll: ")
                 .. (bestUsed and Color(GRAY, "used today") or Color(colors.main, "available"))
                 .. Color(SOFT, "  ·  This character: ")
-                .. (doneToday and Color(GRAY, "done today") or Color(colors.main, "not done today"))
+                .. (doneToday and Color(GRAY, "done") or Color(colors.main, "not done"))
         end
-
-        local text = ("%s: %d of %d collectibles"):format(boss.name, owned, total)
-            .. Color(GRAY, " (hover to see drops)")
-        if done then text = Color(GRAY, text) end
 
         local notes = {
             "Your first boss kill of the day, across your whole account, gets the best mount chance. "
@@ -524,58 +615,150 @@ local function BuildLines(item)
         if boss.hardMode then notes[#notes + 1] = "Hard mode: " .. boss.hardMode end
         notes[#notes + 1] = "Click to open the Dungeon Finder."
 
-        specs[#specs + 1] = {
+        toGet[#toGet + 1] = {
             icon = ICONS.boss,
-            text = text .. status,
+            text = boss.name .. (status or ""),
+            right = Color(bossDone and GRAY or colors.main, owned .. " of " .. total),
             tooltip = ListTooltip(boss.name .. " drops", boss.drops, colors, notes),
             onClick = OpenDungeonFinder,
         }
     end
 
-    -- Collection count lines
+    -- Collection counts: unfinished ones listed, finished ones folded into "Done"
     for _, field in ipairs(COUNT_ORDER) do
         if data[field] and #data[field] > 0 then
-            local spec, done = CountLine(name, field, data[field], colors)
             hasGoals = true
-            if not done then allDone = false end
-            specs[#specs + 1] = spec
+            local spec, isDone = CountLine(name, field, data[field], colors)
+            if isDone then
+                done[#done + 1] = spec.doneLabel
+                doneTooltips[#doneTooltips + 1] = spec
+            else
+                toGet[#toGet + 1] = spec
+            end
         end
     end
 
-    -- Everything finished: collapse to one calm line
-    if allDone and hasGoals then
-        return { { text = Color(GRAY, "Everything here is collected. All done! Grats!") } }
-    end
-
-    -- Tip
+    -- How to: tip, shopping, class lines
     if HolidayHeraldDB.showTips and data.tip then
-        local text = data.tip.short
-        if data.tip.hover then text = text .. Color(GRAY, " (hover for more)") end
-        specs[#specs + 1] = {
+        howTo[#howTo + 1] = {
             icon = ICONS.tip,
-            text = Color("C9C1B1", text),
+            text = Color("C9C1B1", data.tip.short),
             tooltip = data.tip.hover and TextTooltip(name .. " tip", colors, data.tip.hover),
         }
     end
 
-    -- Class lines (shown to everyone with a label)
+    -- Only list items for this character's professions (items without one always show)
+    local shopping = {}
+    if HolidayHeraldDB.showTips and data.shopping then
+        local mine = MyProfessionSkillLines()
+        for _, buy in ipairs(data.shopping) do
+            if not buy.skillLine or mine[buy.skillLine] then shopping[#shopping + 1] = buy end
+        end
+    end
+
+    if #shopping > 0 then
+        local names = {}
+        for _, buy in ipairs(shopping) do
+            names[#names + 1] = Color(colors.accent, (buy.count and (buy.count .. "x ") or "") .. buy.name)
+        end
+        local key = data.key or name
+        shoppingNext[key] = shoppingNext[key] or 1
+        howTo[#howTo + 1] = {
+            icon = C_Item.GetItemIconByID(shopping[1].item) or ICONS.collect,
+            text = (data.shoppingFor and (data.shoppingFor .. ": bring ") or "Bring along: ")
+                .. table.concat(names, " + "),
+            tooltip = function(tt)
+                tt:AddLine(data.shoppingFor or "Bring along", Hex(colors.main))
+                for _, buy in ipairs(shopping) do
+                    tt:AddDoubleLine((buy.count and (buy.count .. "x ") or "") .. buy.name, "ID " .. buy.item, 1, 1, 1, 0.72, 0.68, 0.61)
+                    local detail = buy.where
+                    if buy.profession then detail = buy.profession .. (detail and (": " .. detail) or "") end
+                    if detail then tt:AddLine("   " .. detail, 0.72, 0.68, 0.61) end
+                end
+                if data.shoppingByProfession then
+                    tt:AddLine("Showing only what your professions need.", 0.55, 0.52, 0.47, true)
+                end
+                if shoppingNext[key] > #shopping then shoppingNext[key] = 1 end
+                local nextBuy = shopping[shoppingNext[key]]
+                tt:AddLine(" ")
+                tt:AddLine("Next shift-click sends: " .. Color(colors.accent, nextBuy.name), 1, 1, 1)
+                tt:AddLine("Each shift-click sends one item, then moves on to the next.", 0.72, 0.68, 0.61, true)
+                tt:AddLine(" ")
+                if ItemWatch_AddToGoal then
+                    tt:AddLine("Ctrl-click: add them all to ItemWatch", 1, 0.82, 0)
+                    tt:AddLine("Adds each amount on top of any goal you already have.", 0.72, 0.68, 0.61, true)
+                else
+                    tt:AddLine("To track them with ItemWatch:", 1, 0.82, 0)
+                    tt:AddLine("1. Click the + on the ItemWatch box.", 0.72, 0.68, 0.61, true)
+                    tt:AddLine("2. Click into the item ID field.", 0.72, 0.68, 0.61, true)
+                    tt:AddLine("3. Shift-click this line, then add it.", 0.72, 0.68, 0.61, true)
+                    tt:AddLine("4. Repeat for each item. The line above shows which one is next.", 0.72, 0.68, 0.61, true)
+                end
+            end,
+            onClick = function()
+                -- Ctrl-click: hand the whole list to ItemWatch in one go
+                if IsControlKeyDown() and ItemWatch_AddToGoal then
+                    for _, buy in ipairs(shopping) do
+                        ItemWatch_AddToGoal(buy.item, buy.count or 1)
+                    end
+                    return
+                end
+                if not IsShiftKeyDown() then return end
+                if shoppingNext[key] > #shopping then shoppingNext[key] = 1 end
+                local buy = shopping[shoppingNext[key]]
+                HandleModifiedItemClick(ItemLink(buy.item, buy.name))
+                shoppingNext[key] = (shoppingNext[key] % #shopping) + 1
+            end,
+        }
+    end
+
     for _, cl in ipairs(HolidayHeraldDB.showClass and data.classLines or {}) do
-        specs[#specs + 1] = {
+        howTo[#howTo + 1] = {
             icon = ICONS[cl.class] or ICONS.tip,
-            text = cl.short .. (cl.hover and Color(GRAY, " (hover for more)") or ""),
+            text = cl.short,
             tooltip = cl.hover and TextTooltip(cl.short, colors, cl.hover),
         }
     end
 
-    -- Secrets (spoilers: teaser only, reveal on hover)
     for _, secret in ipairs(HolidayHeraldDB.showSecrets and data.secrets or {}) do
-        specs[#specs + 1] = {
+        secrets[#secrets + 1] = {
             icon = ICONS.secret,
-            text = Color("C9C1B1", secret.teaser) .. Color(GRAY, " (hover to reveal)"),
+            text = Color("C9C1B1", (secret.teaser:gsub("^Secret: ", ""):gsub("^%l", string.upper))),
             tooltip = TextTooltip("Secret!", colors, secret.reveal),
         }
     end
 
+    -- Assemble sections
+    local specs = {}
+    local function Section(title, list)
+        if #list == 0 then return end
+        specs[#specs + 1] = { header = title, colors = colors }
+        for _, spec in ipairs(list) do specs[#specs + 1] = spec end
+    end
+
+    if hasGoals and #toGet == 0 then
+        specs[#specs + 1] = { text = Color(GRAY, DONE_ICON .. "Everything here is collected. All done! Grats!") }
+    else
+        if #done > 0 then
+            local target = AchievementToOpen(data.achievements)
+                or (data.meta and data.meta.holidayMeta)
+            toGet[#toGet + 1] = {
+                text = Color(GRAY, DONE_ICON .. "Done: " .. table.concat(done, ", ")),
+                tooltip = function(tt)
+                    tt:AddLine("Already finished", Hex(colors.main))
+                    tt:AddLine(table.concat(done, ", "), 1, 1, 1, true)
+                    if target then
+                        tt:AddLine(" ")
+                        tt:AddLine("Click: open the achievement window", 0.72, 0.68, 0.61)
+                    end
+                end,
+                onClick = AchievementClick(target),
+            }
+        end
+        Section("Still to get", toGet)
+    end
+    Section("How to", howTo)
+    Section("Secrets", secrets)
     return specs
 end
 
@@ -627,6 +810,9 @@ local function NewLine()
     b.text:SetPoint("TOPLEFT", 20, 0)
     b.text:SetJustifyH("LEFT")
     b.text:SetSpacing(2)
+    b.right = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    b.right:SetPoint("TOPRIGHT", 0, 0)
+    b.right:SetJustifyH("RIGHT")
     b:RegisterForClicks("LeftButtonUp", "LeftButtonDown")
     b:SetScript("OnEnter", function(self)
         if self.tooltip then
@@ -655,7 +841,28 @@ local function PlaceLine(parent, spec, x, y, width)
     b:ClearAllPoints()
     b:SetPoint("TOPLEFT", x, y)
     b:SetWidth(width)
-    b.text:SetWidth(width - 20)
+    if spec.header then
+        -- Small section header inside a card
+        b.text:SetFontObject(GameFontNormalSmall)
+        b.text:ClearAllPoints()
+        b.text:SetPoint("TOPLEFT", 0, 0)
+        b.text:SetWidth(width)
+        b.text:SetText(spec.header:upper())
+        b.text:SetTextColor(DarkHex((spec.colors or DEFAULT_COLORS).main, 0.8))
+        b.right:SetText("")
+        b.icon:Hide()
+        b.tooltip, b.onClick = nil, nil
+        b:SetHeight(16)
+        b:Show()
+        return 16
+    end
+    b.text:SetFontObject(GameFontHighlight)
+    b.text:SetTextColor(1, 1, 1)
+    b.text:ClearAllPoints()
+    b.text:SetPoint("TOPLEFT", 20, 0)
+    b.right:SetText(spec.right or "")
+    local rightWidth = spec.right and (b.right:GetStringWidth() + 10) or 0
+    b.text:SetWidth(width - 20 - rightWidth)
     b.text:SetText(spec.text)
     if spec.icon then
         b.icon:SetTexture(spec.icon)
@@ -713,7 +920,7 @@ local function StatusText(item)
     if item.preview then
         local when = (item.daysAway == 0) and "as if active today" or ("as if starting in " .. item.daysAway .. " days")
         local text = Color("B48CE0", "Preview") .. Color(SOFT, "  ·  " .. when)
-        if item.isShort then text = text .. Color("FF8000", "  (short!)") end
+        if item.isShort and item.category ~= "micro" then text = text .. Color("FF8000", "  (short!)") end
         return text
     end
     local text
@@ -726,8 +933,26 @@ local function StatusText(item)
     else
         text = Color("FFD100", "In " .. item.daysAway .. " days")
     end
-    if item.isShort then text = text .. Color("FF8000", "  (short!)") end
+    if item.isShort and item.category ~= "micro" then text = text .. Color("FF8000", "  (short!)") end
     return text
+end
+
+-- The calendar's own holiday art is a wide banner that squishes badly into a
+-- square, so cards prefer a proper square icon: one set in the data file, the
+-- holiday's meta achievement icon, or a key item's icon.
+local function CardIcon(item)
+    local data = item.data
+    if data.icon then return data.icon end
+    local achievementID = data.iconAchievement or (data.meta and data.meta.holidayMeta)
+    if achievementID then
+        local icon = select(10, GetAchievementInfo(achievementID))
+        if icon then return icon end
+    end
+    if data.iconItem then
+        local icon = C_Item.GetItemIconByID(data.iconItem)
+        if icon then return icon end
+    end
+    return item.icon or ICONS.fallback
 end
 
 local function PlaceCard(item, y, width)
@@ -742,16 +967,26 @@ local function PlaceCard(item, y, width)
     c:SetPoint("TOPLEFT", 16, y)
     c:SetWidth(width)
     c:SetBackdropColor(Hex(colors.card))
-    c:SetBackdropBorderColor(Hex(colors.main))
-    c.icon:SetTexture(item.icon or ICONS.fallback)
-    c.title:SetText(item.data.name or item.title)
-    c.title:SetTextColor(Hex(colors.main))
+    c:SetBackdropBorderColor(Hex(colors.border or colors.main))
+    c.icon:SetTexture(CardIcon(item))
+    local titleText = item.data.name or item.title
+    if colors.titleGradient then
+        c.title:SetText(GradientText(titleText, colors.titleGradient))
+        c.title:SetTextColor(1, 1, 1)
+    elseif colors.titleStripes then
+        c.title:SetText(StripeText(titleText, colors.titleStripes))
+        c.title:SetTextColor(1, 1, 1)
+    else
+        c.title:SetText(titleText)
+        c.title:SetTextColor(Hex(colors.main))
+    end
     c.title:SetShadowColor(DarkHex(colors.main, 0.25))
     c.title:SetShadowOffset(2, -2)
     c.status:SetText(StatusText(item))
 
     local ly = -46
-    for _, spec in ipairs(BuildLines(item)) do
+    for index, spec in ipairs(BuildLines(item)) do
+        if spec.header and index > 1 then ly = ly - 4 end
         ly = ly - PlaceLine(c, spec, 12, ly, width - 24) - 3
     end
     c:SetHeight(-ly + 8)
@@ -769,18 +1004,27 @@ local function Render(items)
     local y = -46
     local width = POPUP_WIDTH - 32
 
-    local holidays, weekly = {}, {}
+    local holidays, weekly, micro = {}, {}, {}
     for _, item in ipairs(items) do
         if item.category == "holiday" then
             holidays[#holidays + 1] = item
         elseif item.category == "weekly" then
             weekly[#weekly + 1] = item
+        elseif item.category == "micro" and item.data then
+            micro[#micro + 1] = item
         end
     end
 
     if #holidays > 0 then
         y = PlaceHeader("Holidays", y)
         for _, item in ipairs(holidays) do
+            y = PlaceCard(item, y, width)
+        end
+    end
+
+    if #micro > 0 then
+        y = PlaceHeader("Micro-holidays", y)
+        for _, item in ipairs(micro) do
             y = PlaceCard(item, y, width)
         end
     end
@@ -807,8 +1051,13 @@ local function Render(items)
         end
     end
 
-    if #holidays == 0 and (#weekly == 0 or not HolidayHeraldDB.showWeekly) then
+    if #holidays == 0 and #micro == 0 and (#weekly == 0 or not HolidayHeraldDB.showWeekly) then
         y = y - PlaceLine(popup, { text = Color(SOFT, "No holidays or events in the next " .. HolidayHeraldDB.lookahead .. " days.") }, 20, y, width - 8)
+    end
+
+    if #holidays > 0 or #micro > 0 then
+        y = y - 4
+        y = y - PlaceLine(popup, { text = Color(GRAY, "Hover any line for details.") }, 20, y, width - 8)
     end
 
     popup:SetHeight(-y + 18)
@@ -896,7 +1145,9 @@ local function HandleLogin()
     -- Micro-holidays: one chat line on the day
     for _, item in ipairs(items) do
         if HolidayHeraldDB.microChat and item.category == "micro" and item.daysAway == 0 and not seen[item.key] then
-            Print("today's micro-holiday is " .. item.title .. ". " .. OPEN_LINK)
+            local name = (item.data and item.data.name) or item.title
+            local tip = (item.data and item.data.tip and HolidayHeraldDB.showTips) and (" " .. item.data.tip.short) or ""
+            Print("today's micro-holiday is " .. name .. "." .. tip .. " " .. OPEN_LINK)
             seen[item.key] = true
         end
     end
@@ -937,7 +1188,7 @@ local function Preview(key, mode)
     local item = {
         title    = data.name,
         data     = data,
-        category = "holiday",
+        category = data.micro and "micro" or "holiday",
         daysAway = (mode == "soon") and 3 or 0,
         endTime  = C_DateAndTime.AdjustTimeByDays(today, 5),
         isShort  = data.short or false,
@@ -1040,7 +1291,7 @@ toast.subtitle:SetJustifyH("LEFT")
 local function ShowToast(colors, title, subtitle, big)
     if not HolidayHeraldDB.toast then return end
     toast:SetBackdropColor(Hex(colors.card))
-    toast:SetBackdropBorderColor(Hex(colors.main))
+    toast:SetBackdropBorderColor(Hex(colors.border or colors.main))
     toast.title:SetText(title)
     toast.title:SetTextColor(Hex(colors.main))
     toast.titleBack:SetText(title)
@@ -1116,22 +1367,62 @@ local function ApplyPreset(name)
     end
 end
 
--- Shared "NerdyBertie" heading: whichever NerdyBertie addon loads first creates it
+-- Shared "NerdyBertie" heading: whichever NerdyBertie addon loads first creates it.
+-- Every NerdyBertie addon carries this same function, the same list, and the
+-- same Media/workshop.tga image, so the page looks the same whoever builds it.
+local WORKSHOP_ADDONS = {
+    { name = "HandyNotes: Dive Bar Front Crawl", folder = "HandyNotes_DiveBarCrawl" },
+    { name = "ItemWatch",                        folder = "ItemWatch" },
+    { name = "Boomkin Buff Watcher",             folder = "BoomkinBuffWatcher" },
+    { name = "Holiday Herald",                   folder = "HolidayHerald" },
+}
+
 local function GetBrandCategory()
     if NerdyBertie_SettingsCategory then return NerdyBertie_SettingsCategory end
     local panel = CreateFrame("Frame")
+
     local mascot = panel:CreateTexture(nil, "ARTWORK")
-    mascot:SetSize(64, 64)
+    mascot:SetSize(80, 80)
     mascot:SetPoint("TOPLEFT", 16, -16)
-    mascot:SetTexture(ICONS.mascot)
+    mascot:SetTexture("Interface\\AddOns\\" .. ADDON .. "\\Media\\workshop")
+
     local heading = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-    heading:SetPoint("LEFT", mascot, "RIGHT", 14, 6)
-    heading:SetText("NerdyBertie")
+    heading:SetPoint("TOPLEFT", mascot, "TOPRIGHT", 14, -10)
+    heading:SetText("NerdyBertie's Addon Workshop")
+
+    local presents = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    presents:SetPoint("TOPLEFT", heading, "BOTTOMLEFT", 0, -6)
+    presents:SetText("presents...")
+
     local blurb = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    blurb:SetPoint("TOPLEFT", mascot, "BOTTOMLEFT", 0, -14)
+    blurb:SetPoint("TOPLEFT", mascot, "BOTTOMLEFT", 0, -16)
     blurb:SetWidth(560)
     blurb:SetJustifyH("LEFT")
-    blurb:SetText("Addons from the NerdyBertie workshop. Pick one from the list on the left to see its settings.")
+    blurb:SetText("Addons for quality of life improvements. If you'd like to check out my other addons, here's the list:")
+
+    local lines = {}
+    for i, addon in ipairs(WORKSHOP_ADDONS) do
+        local line = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        line:SetPoint("TOPLEFT", (i == 1) and blurb or lines[i - 1], "BOTTOMLEFT", (i == 1) and 12 or 0, (i == 1) and -12 or -6)
+        lines[i] = line
+        line.addon = addon
+    end
+
+    local footer = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    footer:SetPoint("TOPLEFT", lines[#lines], "BOTTOMLEFT", -12, -16)
+    footer:SetWidth(560)
+    footer:SetJustifyH("LEFT")
+    footer:SetText("Find them all on CurseForge, Wago, and WoWInterface. Pick an installed one from the list on the left to see its settings.")
+
+    -- Refresh the "installed" marks each time the page is shown
+    panel:SetScript("OnShow", function()
+        for i, line in ipairs(lines) do
+            local loaded = C_AddOns and C_AddOns.IsAddOnLoaded(line.addon.folder)
+            line:SetText(i .. ". " .. line.addon.name
+                .. (loaded and "  |cff33ff33(installed)|r" or ""))
+        end
+    end)
+
     local category = Settings.RegisterCanvasLayoutCategory(panel, "NerdyBertie")
     Settings.RegisterAddOnCategory(category)
     NerdyBertie_SettingsCategory = category
