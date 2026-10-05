@@ -15,6 +15,7 @@ HH.Holidays.GreatGnomereganRun = {
         accent = "4FC3C9",              -- tinker teal
         card   = "1A1824",
         border = "4FC3C9",
+        titleGradient = { "E86FB0", "4FC3C9" },   -- gnome pink -> tinker teal
     },
 
     tip = {
