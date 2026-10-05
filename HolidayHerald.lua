@@ -24,6 +24,8 @@ local DB_DEFAULTS = {
     showWeekly   = true,
     microChat    = true,
     showMinimap  = true,
+    achievementToast = true,   -- a small toast for every achievement
+    showTradingPost  = true,   -- Trading Post reminder under Weekly Events
 }
 local FANFARE_SOUND_ID     = 888    -- level-up fanfare (VERIFY sound choice)
 local BIG_FANFARE_SOUND_ID = 888    -- for the Violet Proto-Drake (VERIFY sound choice)
@@ -47,6 +49,8 @@ local ICONS = {
     HUNTER   = "Interface\\Icons\\ClassIcon_Hunter",
     fallback = "Interface\\Icons\\INV_Misc_QuestionMark",
     mascot   = "Interface\\AddOns\\HolidayHerald\\Media\\mascot",
+    teatime  = "Interface\\AddOns\\HolidayHerald\\Media\\teatime",
+    tradingPost = "Interface\\Icons\\INV_Misc_Coin_17",
 }
 
 local simulateOwned = false   -- preview "done" mode
@@ -393,6 +397,18 @@ end
 ---------------------------------------------------------------------------
 -- Tooltip builders
 ---------------------------------------------------------------------------
+-- Tooltips that show map coordinates get a small tip about /way commands
+local WAY_TIP = "Tip: with TomTom installed, type /way and the coordinates to get an arrow."
+
+local function HasCoords(text)
+    return type(text) == "string" and text:find("%d+%.%d+,%s*%d+%.%d+") ~= nil
+end
+
+local function AddWayTip(tt)
+    tt:AddLine(" ")
+    tt:AddLine(WAY_TIP, 0.55, 0.52, 0.47, true)
+end
+
 -- body can be a plain string, or a list of lines:
 --   "text"            a wrapped line
 --   "#Heading"        a heading in the holiday's accent color
@@ -403,9 +419,14 @@ local function TextTooltip(title, colors, body)
         tt:AddLine(title, Hex(colors.main))
         if type(body) ~= "table" then
             tt:AddLine(body, 1, 1, 1, true)
+            if HasCoords(body) then AddWayTip(tt) end
             return
         end
+        local coords = false
         for _, line in ipairs(body) do
+            if HasCoords(line) or (type(line) == "table" and (HasCoords(line[1]) or HasCoords(line[2]))) then
+                coords = true
+            end
             if type(line) == "table" then
                 tt:AddDoubleLine(line[1], line[2], 1, 1, 1, 0.72, 0.68, 0.61)
             elseif line:sub(1, 1) == "#" then
@@ -414,6 +435,7 @@ local function TextTooltip(title, colors, body)
                 tt:AddLine(line, 1, 1, 1, true)
             end
         end
+        if coords then AddWayTip(tt) end
     end
 end
 
@@ -449,6 +471,9 @@ local function ListTooltip(title, list, colors, notes)
         for _, note in ipairs(notes or {}) do
             tt:AddLine(" ")
             tt:AddLine(note, 0.72, 0.68, 0.61, true)
+        end
+        for _, entry in ipairs(list) do
+            if HasCoords(entry.where) then AddWayTip(tt) break end
         end
     end
 end
@@ -1015,6 +1040,64 @@ end
 local QueueRedraw   -- defined below
 local retryCount = 0
 
+---------------------------------------------------------------------------
+-- Trading Post reminder
+---------------------------------------------------------------------------
+local TRADERS_TENDER = 2032   -- currency ID
+
+local function TenderBalance()
+    if not (C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo) then return nil end
+    local info = C_CurrencyInfo.GetCurrencyInfo(TRADERS_TENDER)
+    return info and info.quantity
+end
+
+-- Opens the Adventure Guide on the Traveler's Log, where Trader's Tender is earned
+local function OpenTravelersLog()
+    local ok = pcall(function()
+        if not EncounterJournal and C_AddOns and C_AddOns.LoadAddOn then
+            C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
+        end
+        ShowUIPanel(EncounterJournal)
+        if EncounterJournal.MonthlyActivitiesTab and EJ_ContentTab_Select then
+            EJ_ContentTab_Select(EncounterJournal.MonthlyActivitiesTab:GetID())
+        end
+    end)
+    if not ok and ToggleEncounterJournal then ToggleEncounterJournal() end
+end
+
+local function TradingPostLine()
+    local today = C_DateAndTime.GetCurrentCalendarTime()
+    local newThisWeek = today.monthDay <= 7
+    local balance = TenderBalance()
+    local text = newThisWeek
+        and (Color("33FF33", "New this month: ") .. Color(SOFT, "the Trading Post has fresh items!"))
+        or (Color("FFD100", "Trading Post: ") .. Color(SOFT, "new items arrive on the 1st of each month"))
+    if balance then
+        text = text .. Color(GRAY, "  (" .. balance .. " Tender)")
+    end
+    return {
+        icon = ICONS.tradingPost,
+        text = text,
+        tooltip = function(tt)
+            tt:AddLine("Trading Post", Hex(DEFAULT_COLORS.main))
+            if balance then tt:AddDoubleLine("Your Trader's Tender", tostring(balance), 1, 1, 1, 1, 0.82, 0) end
+            tt:AddLine(" ")
+            tt:AddLine("Where", Hex(DEFAULT_COLORS.main))
+            tt:AddDoubleLine("Stormwind", "on the city map", 1, 1, 1, 0.72, 0.68, 0.61)
+            tt:AddDoubleLine("Orgrimmar", "on the city map", 1, 1, 1, 0.72, 0.68, 0.61)
+            tt:AddDoubleLine("Silvermoon: The Bazaar (Midnight)", "49.0, 78.0", 1, 1, 1, 0.72, 0.68, 0.61)
+            tt:AddDoubleLine("Dornogal: The Foregrounds (The War Within)", "44.6, 56.0", 1, 1, 1, 0.72, 0.68, 0.61)
+            tt:AddLine(" ")
+            tt:AddLine("Earning Trader's Tender", Hex(DEFAULT_COLORS.main))
+            tt:AddLine("Complete activities in the Traveler's Log, in the Adventure Guide. New activities and new Trading Post items arrive on the 1st of every month, and unspent Tender carries over.", 1, 1, 1, true)
+            tt:AddLine(" ")
+            tt:AddLine("Click to open the Traveler's Log.", 0.72, 0.68, 0.61)
+            AddWayTip(tt)
+        end,
+        onClick = OpenTravelersLog,
+    }
+end
+
 local COLUMN_GAP = 12
 local TWO_COLUMN_AT = 3      -- this many cards or more switches to two columns
 
@@ -1071,8 +1154,14 @@ local function Render(items)
         y = PlaceCards(micro, y, columns, columnWidth)
     end
 
-    if #weekly > 0 and HolidayHeraldDB.showWeekly then
+    local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost
+    if showWeeklySection then
         y = PlaceHeader("Weekly Events", y)
+        if HolidayHeraldDB.showTradingPost then
+            y = y - PlaceLine(popup, TradingPostLine(), 20, y, width - 8) - 2
+        end
+    end
+    if #weekly > 0 and HolidayHeraldDB.showWeekly then
         for _, item in ipairs(weekly) do
             local label
             local title = item.title
@@ -1093,7 +1182,7 @@ local function Render(items)
         end
     end
 
-    if #holidays == 0 and #micro == 0 and (#weekly == 0 or not HolidayHeraldDB.showWeekly) then
+    if #holidays == 0 and #micro == 0 and not showWeeklySection then
         y = y - PlaceLine(popup, { text = Color(SOFT, "No holidays or events in the next " .. HolidayHeraldDB.lookahead .. " days.") }, 20, y, width - 8)
     end
 
@@ -1325,25 +1414,78 @@ toast.subtitle:SetPoint("TOPLEFT", toast.titleBack, "BOTTOMLEFT", 0, -8)
 toast.subtitle:SetWidth(340)
 toast.subtitle:SetJustifyH("LEFT")
 
-local function ShowToast(colors, title, subtitle, big)
-    if not HolidayHeraldDB.toast then return end
-    toast:SetBackdropColor(Hex(colors.card))
-    toast:SetBackdropBorderColor(Hex(colors.border or colors.main))
-    toast.title:SetText(title)
-    toast.title:SetTextColor(Hex(colors.main))
-    toast.titleBack:SetText(title)
-    toast.titleBack:SetTextColor(DarkHex(colors.main))
-    toast.subtitle:SetText(subtitle)
+-- Toasts wait their turn, so several achievements at once don't overlap
+local toastQueue, toastShowing = {}, false
+local ShowNextToast
+
+local function DisplayToast(t)
+    toastShowing = true
+    toast.icon:SetTexture(t.icon or ICONS.mascot)
+    toast:SetBackdropColor(Hex(t.colors.card))
+    toast:SetBackdropBorderColor(Hex(t.colors.border or t.colors.main))
+    toast.title:SetText(t.title)
+    toast.title:SetTextColor(Hex(t.colors.main))
+    toast.titleBack:SetText(t.title)
+    toast.titleBack:SetTextColor(DarkHex(t.colors.main))
+    toast.subtitle:SetText(t.subtitle)
     toast:SetAlpha(1)
     toast:Show()
-    if HolidayHeraldDB.fanfare then
+    if t.sound then
         -- Wait a moment so it doesn't pile on top of the game's own chime
-        C_Timer.After(1, function() PlaySound(big and BIG_FANFARE_SOUND_ID or FANFARE_SOUND_ID) end)
+        C_Timer.After(1, function() PlaySound(t.sound) end)
     end
-    C_Timer.After(big and 8 or 6, function()
+    C_Timer.After(t.duration or 6, function()
         UIFrameFadeOut(toast, 1.5, 1, 0)
-        C_Timer.After(1.6, function() toast:Hide() end)
+        C_Timer.After(1.6, function()
+            toast:Hide()
+            toastShowing = false
+            ShowNextToast()
+        end)
     end)
+end
+
+function ShowNextToast()
+    if toastShowing or #toastQueue == 0 then return end
+    DisplayToast(table.remove(toastQueue, 1))
+end
+
+local function QueueToast(t)
+    if #toastQueue >= 5 then return end     -- a big batch at once only shows the first few
+    toastQueue[#toastQueue + 1] = t
+    ShowNextToast()
+end
+
+-- Holiday celebration toast: the thumbs-up herald
+local function ShowToast(colors, title, subtitle, big)
+    if not HolidayHeraldDB.toast then return end
+    QueueToast({
+        colors = colors, title = title, subtitle = subtitle, icon = ICONS.mascot,
+        duration = big and 8 or 6,
+        sound = HolidayHeraldDB.fanfare and (big and BIG_FANFARE_SOUND_ID or FANFARE_SOUND_ID) or nil,
+    })
+end
+
+-- Everyday achievement toast: the tea-sipping herald
+local TEA_COLORS = { main = "E3C27A", accent = "B48CE0", card = "1C1824", border = "B48CE0" }
+local TEA_TITLES = {
+    "Tea-rrific!",
+    "Jolly good show!",
+    "Splendid, simply splendid!",
+    "Pinkies up!",
+    "How delightful!",
+}
+
+local function TeaToast(achievementID)
+    if not HolidayHeraldDB.achievementToast then return end
+    local _, name, points = GetAchievementInfo(achievementID)
+    if not name then return end
+    QueueToast({
+        colors = TEA_COLORS,
+        title = TEA_TITLES[math.random(#TEA_TITLES)],
+        subtitle = name .. ((points and points > 0) and Color(GRAY, "  (" .. points .. " points)") or ""),
+        icon = ICONS.teatime,
+        duration = 5,
+    })
 end
 
 local function CelebrateAchievement(achievementID)
@@ -1360,6 +1502,8 @@ local function CelebrateAchievement(achievementID)
             return
         end
     end
+    -- Any other achievement gets the everyday toast
+    TeaToast(achievementID)
 end
 
 ---------------------------------------------------------------------------
@@ -1368,7 +1512,7 @@ end
 local PRESETS = {
     all     = {},
     visuals = { alertSound = false, fanfare = false },
-    quiet   = { alertMessage = false, alertSound = false, toast = false, fanfare = false, microChat = false },
+    quiet   = { alertMessage = false, alertSound = false, toast = false, fanfare = false, microChat = false, achievementToast = false },
 }
 local settingObjects = {}
 local settingsCategory
@@ -1535,6 +1679,8 @@ local function BuildSettings()
         Print("popup moved back to its default spot.")
     end, "Move the Holiday Herald popup back to the middle of the screen.")
     Checkbox("showThemes", "Holiday color themes", "Give each holiday card its own colors.")
+    Checkbox("showTradingPost", "Trading Post reminder",
+        "Show the Trading Post and your Trader's Tender under Weekly Events. Click it to open the Traveler's Log.")
     Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly Events.")
 
     Header("What the cards show")
@@ -1566,6 +1712,8 @@ local function BuildSettings()
     Header("Celebrations")
     Checkbox("toast", "Celebration toast", "A \"Grats!\" toast when you finish a holiday's meta achievement.")
     Checkbox("fanfare", "Celebration fanfare", "Play a fanfare with the celebration toast.")
+    Checkbox("achievementToast", "Toast for every achievement",
+        "A small toast from the tea-sipping herald whenever you earn any achievement.")
 end
 
 function HH.BuildSettings()
@@ -1673,6 +1821,8 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
         elseif cmd == "toast" then
             if arg1 == "trip" then
                 CelebrateAchievement(2144)
+            elseif arg1 == "tea" then
+                TeaToast(6)      -- "Level 10", just for a preview
             else
                 local data = FindDataByKey(arg1)
                 if data and data.meta then CelebrateAchievement(data.meta.holidayMeta)

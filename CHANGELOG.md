@@ -1,5 +1,16 @@
 # Holiday Herald
 
+## v1.3.0
+
+### New
+- Achievement toasts: a tea-sipping herald pops up with a little cheer whenever you earn any achievement. Turn it off under Celebrations in the settings.
+- Trading Post reminder under Weekly Events, with your Trader's Tender. Hover for where to find it, or click to open the Traveler's Log.
+
+### Improvements
+- Toasts now wait their turn, so several achievements at once don't overlap.
+- Trading Post hover lists all four locations, including Silvermoon and Dornogal.
+- Tooltips with map coordinates now mention TomTom's /way command.
+
 ## v1.2.0
 
 ### New
