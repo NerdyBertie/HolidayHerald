@@ -117,7 +117,7 @@ HH.Holidays.WinterVeil = {
             "Father Winter's Helper gives sleigh rides there from Ironforge and Orgrimmar, and to those cities from Dornogal (48.0, 52.2).",
             " ",
             "#Little extras",
-            "/kiss a Winter Reveler under the mistletoe in inns (once an hour) for holiday goodies.",
+            "/kiss a Winter Reveler under the mistletoe in inns (once an hour) for Mistletoe, Fresh Holly, or a Handful of Snowflakes. You'll need these for some Winter Veil achievements.",
             "Step into a Winter Wondervolt machine to become a Little Helper.",
             "Humanoid dungeon bosses wear festive hats, and have a rare chance to drop them.",
             " ",
@@ -159,6 +159,23 @@ HH.Holidays.WinterVeil = {
         {
             teaser = "Secret: even a cosmic villain gets festive...",
             reveal = "Dimensius in K'aresh joins in on Winter Veil too. Maybe he'll give you his hat if you hit him hard enough...",
+        },
+        {
+            teaser = "Secret: someone goes sledding at the top of every hour...",
+            reveal = "At the top of each hour, a tauren Greatfather Winter rides his sleigh down from near the top "
+                  .. "of Highmountain Peak in Highmountain (Legion). Catch up to him for a festive greeting and "
+                  .. "500 Order Resources.",
+        },
+        {
+            teaser = "Secret: some bosses go all out with their holiday outfits...",
+            reveal = {
+                "Visit these bosses during Winter Veil to see them dressed up:",
+                { "Devos (Spires of Ascension)", "two hats, not one" },
+                { "Fetid Devourer (Uldir)", "a decoration on each head" },
+                { "Blackwater Behemoth (Eternal Palace)", "mistletoe and a Santa hat" },
+                { "Varimathras (Antorus)", "a candy cane in his eye" },
+                { "Council of Dreams (Amirdrassil)", "all festive" },
+            },
         },
         {
             teaser = "Secret: one boss only dresses up on Christmas Day...",
