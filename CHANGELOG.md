@@ -1,6 +1,6 @@
 # Holiday Herald
 
-## v1.3.1
+## v1.4.0
 
 ### New
 - Feast of Winter Veil is now a full card: the Merrymaker meta, 31 toys, 10 pets, a mount, holiday transmog and hats, a shopping list for Greatfather Winter's treats, the hunter reindeer, and seven secrets.
