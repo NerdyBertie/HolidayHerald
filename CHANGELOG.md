@@ -1,6 +1,6 @@
 # Holiday Herald
 
-## v1.4.1
+## v1.5.0
 
 ### New
 - Moonkin Festival (November 12) now has a micro-holiday card: how to earn all five Moonkin Hatchlings, with coordinates, plus two secrets.
