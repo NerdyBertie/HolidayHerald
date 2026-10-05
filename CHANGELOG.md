@@ -2,11 +2,15 @@
 
 ## v1.3.1
 
+### New
+- Feast of Winter Veil is now a full card: the Merrymaker meta, 31 toys, 10 pets, a mount, holiday transmog and hats, a shopping list for Greatfather Winter's treats, the hunter reindeer, and five secrets.
+
 ### Improvements
 - The popup now shows the version number next to its title.
 - Hallow's End: all nine Horseman's Ghoulish pieces and the whole Patched Harvest Golem set are now tracked individually, plus Kickin' With the Wick and The Lick King.
 - Hallow's End tip: Wickerman buffs, the Shade of the Horseman event, and better hard mode details.
 - Two new Hallow's End secrets, and more detail for the Coin of Many Faces and witch hat secrets.
+- Day of the Dead: the Bouquet of Orange Marigolds and Whimsical Skull Mask are now tracked, the tip lists each race's home graveyard with coordinates, and there's a new Demon Hunter secret.
 
 ## v1.3.0
 
