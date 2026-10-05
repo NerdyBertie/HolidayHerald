@@ -1,5 +1,3 @@
-
-
 <p align=center><img width="254" height="254" alt="HolidayHerald-icon-512" src="https://github.com/user-attachments/assets/cf2cd51f-cefe-4cfd-b766-85edaf6d1c80" /></p>
 
 
@@ -22,20 +20,29 @@ Built after missing Pirates' Day (and the Jolly Roger) five days after hitting e
 - **Stays quiet.** A full popup the first time each character sees a holiday, then just a chat line after that.
 - **Weekly events.** PvP Brawls, bonus events, and Timewalking listed in their own section.
 - **Celebration toast.** Finish a holiday's meta and the NerdyBertie herald gives you a thumbs-up.
+- **Achievement toasts.** Every achievement you earn gets a little cheer from a very dapper herald. (Turn it off in the settings if you'd rather not.)
+- **Trading Post reminder.** See your Trader's Tender at a glance, get a heads-up when new items arrive on the 1st, and click to open the Traveler's Log.
+- **Smart shopping lists.** Holidays that need you to bring something list it for you, and profession quests only show what your professions need.
+- **Clickable achievements.** Click any achievement line to open it, or shift-click to link it in chat. Great for showing off or comparing progress with friends!
+- **Micro-holidays.** Little holidays like The Great Gnomeregan Run get a chat line on the day and their own card.
+- **Tidy layout.** With three or more holidays at once, the popup switches to two columns.
 
 ## Holidays covered
 
-Brewfest, Hallow's End, Darkmoon Faire, and Pirates' Day, with more holidays added before each one arrives.
+Full cards: Brewfest, Hallow's End, Day of the Dead, Pilgrim's Bounty, Darkmoon Faire, Pirates' Day, and The Great Gnomeregan Run.
+
+Every other holiday (Winter Veil, Lunar Festival, Love is in the Air, Noblegarden, Children's Week, Midsummer, WoW's Anniversary, and Darkspear Dash) has a themed card, with full details added before each one arrives.
 
 ## Commands
 
 - `/herald`: show the popup
 - `/herald options`: open settings
+- `/herald resetpos`: move the popup back to the middle of the screen
 - Minimap button and addon compartment: left-click for the popup, right-click for settings
 
 ## Settings
 
-Find them under **Options → AddOns → NerdyBertie → Holiday Herald**. Quick presets (All on, Visuals only, Quiet), plus toggles for every piece: themes, tips, secrets, alerts, sounds, and more.
+Find them under **Options → AddOns → NerdyBertie → Holiday Herald**. Quick presets (All on, Visuals only, Quiet), plus toggles for every piece: themes, tips, secrets, alerts, sounds, achievement toasts, the Trading Post reminder, and more. There's also a button to reset the popup's position.
 
 ---
 
