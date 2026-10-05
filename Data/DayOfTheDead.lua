@@ -47,29 +47,39 @@ HH.Holidays.DayOfTheDead = {
         246188, 246187, 246186, 246185, 246184,   -- Crowns of the Dead
         246180, 246181, 246179, 246182, 246183,   -- Deathmasks
         246154, 246155, 246156, 246157, 246158,   -- Remembrance Veils
+        { item = 46861, name = "Bouquet of Orange Marigolds" },
+        { item = 46860, name = "Whimsical Skull Mask", note = "Can only be transmogged during the holiday" },
     },
 
     tip = {
         short = "/dance with Catrina at a capital city graveyard for Dead Man's Party!",
         hover = {
             "#Dead Man's Party",
-            "Target Catrina near the graveyard of any capital city and /dance. You'll turn into a dressed-up skeleton, too.",
+            "Target Catrina near the graveyard of any capital city and /dance. You'll turn into a dressed-up skeleton for 12 hours, too.",
             " ",
             "#Before you go (pet quest)",
             "Buy Simple Flour from a cooking supplies vendor and Ice Cold Milk from an innkeeper first.",
             " ",
-            "#Where",
-            { "Alliance: Stormwind graveyard", "46.8, 26.0" },
-            { "Horde: Ruins of Lordaeron", "68.0, 10.4" },
-            "Dalaran and Shattrath graveyards work too. Do the quest at your own side's spot.",
+            "#Where: your race's home graveyard",
+            { "Human, Kul Tiran: Stormwind", "46.8, 26.0" },
+            { "Dwarf, Dark Iron, Gnome, Mechagnome: Dun Morogh", "61.6, 37.4" },
+            { "Night Elf, Worgen, Void Elf: Darnassus", "68.6, 40.0" },
+            { "Draenei, Lightforged: Azuremyst Isle", "47.6, 55.8" },
+            { "Orc, Mag'har, Goblin, Troll, Zandalari: Durotar", "47.4, 17.6" },
+            { "Undead: Ruins of Lordaeron", "68.0, 10.4" },
+            { "Tauren, Highmountain: Thunder Bluff", "56.8, 17.6" },
+            { "Blood Elf, Nightborne: Eversong Woods", "48.0, 49.4" },
+            "Any race (including Pandaren, Vulpera, Dracthyr, and Earthen) can use Dalaran or Shattrath instead.",
+            "Darnassus and Undercity may need Zidormi to show their older versions.",
             " ",
             "#The Grateful Dead",
-            "From Chapman, next to Catrina: buy Recipe: Bread of the Dead and an Orange Marigold.",
-            "Learn the recipe, and bake the bread at the Ghostly Cooking Fire by the vendor.",
-            "Use the marigold to see the hidden Cheerful Spirit, accept The Grateful Dead, and hand over the bread for the Macabre Marionette.",
+            "From Chapman, next to Catrina: buy Recipe: Bread of the Dead, plus an Orange Marigold or the reusable Marigold Petal Offering Bowl (it works again every year).",
+            "Bake the bread first, at the blue Ghostly Cooking Fire by Chapman. The marigold only shows the spirits for about 30 seconds, so be ready!",
+            "Use the marigold to see the hidden Cheerful Spirit, accept The Grateful Dead, and the bread in your bags turns it in for the Macabre Marionette. A Spirit Candle shows even more spirits.",
             " ",
             "#Vendor",
             "Chapman also sells crowns, deathmasks, and veils (100 gold each), and the drake armor (50,000 gold).",
+            "Bread of the Dead can't be mailed and disappears after the holiday, so don't bake extras for alts.",
         },
     },
 
@@ -85,7 +95,13 @@ HH.Holidays.DayOfTheDead = {
             teaser = "Secret: those costumes aren't just for show...",
             reveal = "Wearing a Contender's Costume gives you a button with random fighting moves. Beat other "
                   .. "costumed players for To The Afterlife (1), Vientos! (20), and Calavera (50). "
-                  .. "It even works after the holiday ends!",
+                  .. "It even works after the holiday ends! Duel a costumed friend: you won't lose "
+                  .. "durability, and three people go faster than two, since all the costumes share one cooldown.",
+        },
+        {
+            teaser = "Secret: some heroes can already see the dead...",
+            reveal = "Demon Hunters can use Spectral Sight instead of a marigold to see the Cheerful Spirit "
+                  .. "and pick up The Grateful Dead.",
         },
     },
 }
