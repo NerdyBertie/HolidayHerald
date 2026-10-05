@@ -5,11 +5,13 @@
 ### New
 - Moonkin Festival (November 12) now has a micro-holiday card: how to earn all five Moonkin Hatchlings, with coordinates, plus two secrets.
 - Wanderer's Festival (early December) now has a micro-holiday card: ceremony times, the achievement, the turtle pet, and two secrets.
+- New Year's Fireworks (December 31) now has a micro-holiday card: show times, ways to make the fireworks pop, party favors, and two secrets.
 
 ### Improvements
 - Pilgrim's Bounty: Now We're Cookin' and Pilgrim's Progress now count the right version for your faction.
 - Pilgrim's Bounty tip: leveling Classic Cooking from 1 to 300, the Spice Bread recipe, where to find Wild Turkeys, and every feast table location.
 - Two new Pilgrim's Bounty secrets.
+- The Great Gnomeregan Run's title now fades from gnome pink to tinker teal, like the other holidays.
 
 ## v1.4.0
 
