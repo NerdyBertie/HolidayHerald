@@ -1,5 +1,13 @@
 # Holiday Herald
 
+## v1.3.1
+
+### Improvements
+- The popup now shows the version number next to its title.
+- Hallow's End: all nine Horseman's Ghoulish pieces and the whole Patched Harvest Golem set are now tracked individually, plus Kickin' With the Wick and The Lick King.
+- Hallow's End tip: Wickerman buffs, the Shade of the Horseman event, and better hard mode details.
+- Two new Hallow's End secrets, and more detail for the Coin of Many Faces and witch hat secrets.
+
 ## v1.3.0
 
 ### New

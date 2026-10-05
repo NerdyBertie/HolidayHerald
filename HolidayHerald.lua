@@ -822,6 +822,19 @@ local popupTitle = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 popupTitle:SetPoint("TOP", 0, -18)
 popupTitle:SetText("Holiday Herald")
 
+-- Version number next to the title, read from the .toc. Copies installed by
+-- hand straight from the repo show "dev" instead of the packager's placeholder.
+local function AddonVersion()
+    local getMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    local version = getMeta and getMeta(ADDON, "Version")
+    if not version or version:find("@", 1, true) then return "dev" end
+    return version
+end
+
+local popupVersion = popup:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+popupVersion:SetPoint("BOTTOMLEFT", popupTitle, "BOTTOMRIGHT", 6, 1)
+popupVersion:SetText(AddonVersion())
+
 local closeButton = CreateFrame("Button", nil, popup, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", -6, -6)
 
