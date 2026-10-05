@@ -34,4 +34,6 @@ Data\LoveIsInTheAir.lua
 Data\Noblegarden.lua
 Data\ChildrensWeek.lua
 Data\DarkspearDash.lua
+Data\MoonkinFestival.lua
+Data\WanderersFestival.lua
 HolidayHerald.lua

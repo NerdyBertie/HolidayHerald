@@ -1,5 +1,16 @@
 # Holiday Herald
 
+## v1.4.1
+
+### New
+- Moonkin Festival (November 12) now has a micro-holiday card: how to earn all five Moonkin Hatchlings, with coordinates, plus two secrets.
+- Wanderer's Festival (early December) now has a micro-holiday card: ceremony times, the achievement, the turtle pet, and two secrets.
+
+### Improvements
+- Pilgrim's Bounty: Now We're Cookin' and Pilgrim's Progress now count the right version for your faction.
+- Pilgrim's Bounty tip: leveling Classic Cooking from 1 to 300, the Spice Bread recipe, where to find Wild Turkeys, and every feast table location.
+- Two new Pilgrim's Bounty secrets.
+
 ## v1.4.0
 
 ### New
