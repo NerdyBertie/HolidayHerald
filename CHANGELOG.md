@@ -1,5 +1,14 @@
 # Holiday Herald
 
+## v1.5.1
+
+### Fixes
+- Holidays now disappear from the popup as soon as they end (usually in the morning), instead of staying up for the rest of that day. If the popup is open when one starts or ends, it refreshes itself.
+
+### Improvements
+- Holidays always show their exact end time, like "ends Oct 10 at 11:59 PM", or "ends today at 7:00 AM" when it's close.
+- Holidays starting today or tomorrow show their exact start time too, like "Starts today at 10:00 AM", instead of saying "Now" before they've begun.
+
 ## v1.5.0
 
 ### New

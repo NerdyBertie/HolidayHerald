@@ -122,6 +122,21 @@ local function ToEpoch(t)
                   hour = t.hour or 0, min = t.minute or 0 })
 end
 
+-- "Oct 10 at 11:59 PM", or "today at 7:00 AM" / "tomorrow at 7:00 AM" when it's that close
+local function FormatEnd(t)
+    if not t or not t.month then return nil end
+    local today = C_DateAndTime.GetCurrentCalendarTime()
+    local tomorrow = C_DateAndTime.AdjustTimeByDays(today, 1)
+    local hour, minute = t.hour or 0, t.minute or 0
+    local clock = ("%d:%02d %s"):format((hour % 12 == 0) and 12 or (hour % 12), minute, hour < 12 and "AM" or "PM")
+    if t.year == today.year and t.month == today.month and t.monthDay == today.monthDay then
+        return "today at " .. clock
+    elseif t.year == tomorrow.year and t.month == tomorrow.month and t.monthDay == tomorrow.monthDay then
+        return "tomorrow at " .. clock
+    end
+    return FormatDate(t) .. " at " .. clock
+end
+
 local function ItemName(entry)
     if entry.name then return entry.name end
     if entry.achievement then
@@ -358,13 +373,19 @@ local function ScanCalendar()
     C_Calendar.SetAbsMonth(today.month, today.year)
 
     local seen, items = {}, {}
+    -- Calendar times are realm (server) time, and so is "today", so this
+    -- comparison works no matter what time zone the player is in
+    local now = ToEpoch(today)
     for dayOffset = 0, HolidayHeraldDB.lookahead do
         local d = C_DateAndTime.AdjustTimeByDays(today, dayOffset)
         local monthOffset = (d.year - today.year) * 12 + (d.month - today.month)
 
         for i = 1, C_Calendar.GetNumDayEvents(monthOffset, d.monthDay) do
             local ev = C_Calendar.GetDayEvent(monthOffset, d.monthDay, i)
-            if ev and ev.calendarType == "HOLIDAY" and ev.title and not seen[ev.title] then
+            -- Skip events that are already over: holidays often end in the morning,
+            -- but still show on the calendar for the rest of that day
+            local ended = ev and now and ev.endTime and (ToEpoch(ev.endTime) or now + 1) <= now
+            if ev and ev.calendarType == "HOLIDAY" and ev.title and not seen[ev.title] and not ended then
                 seen[ev.title] = true
                 local data = FindData(ev.title)
                 local s, e = ToEpoch(ev.startTime), ToEpoch(ev.endTime)
@@ -388,6 +409,11 @@ local function ScanCalendar()
                         item.expansion = FindExpansion(item.description) or FindExpansion(ev.title)
                     end
                 end
+                item.endEpoch   = e
+                item.startEpoch = s
+                item.startTime  = ev.startTime
+                -- Holidays start at different times of day, so "today" doesn't always mean "now"
+                item.started    = (not s) or (now ~= nil and s <= now)
             end
         end
     end
@@ -980,12 +1006,13 @@ local function StatusText(item)
         return text
     end
     local text
-    if item.daysAway == 0 then
+    if item.daysAway == 0 and item.started ~= false then
         text = Color("33FF33", "Now")
-        local ends = FormatDate(item.endTime)
+        local ends = FormatEnd(item.endTime)
         if ends then text = text .. Color(SOFT, "  ·  ends " .. ends) end
-    elseif item.daysAway == 1 then
-        text = Color("FFD100", "Tomorrow")
+    elseif item.daysAway <= 1 then
+        -- Starts later today or tomorrow: show the exact time
+        text = Color("FFD100", "Starts " .. (FormatEnd(item.startTime) or (item.daysAway == 0 and "today" or "tomorrow")))
     else
         text = Color("FFD100", "In " .. item.daysAway .. " days")
     end
@@ -1051,6 +1078,7 @@ local function PlaceCard(item, y, width, x)
 end
 
 local QueueRedraw   -- defined below
+local refreshToken  -- bumps each render, so only the latest end-of-event refresh runs
 local retryCount = 0
 
 ---------------------------------------------------------------------------
@@ -1181,9 +1209,11 @@ local function Render(items)
             if item.expansion then
                 title = title .. Color(DEFAULT_COLORS.main, " (" .. item.expansion .. ")")
             end
-            if item.daysAway == 0 then
-                local ends = FormatDate(item.endTime)
+            if item.daysAway == 0 and item.started ~= false then
+                local ends = FormatEnd(item.endTime)
                 label = Color("33FF33", "Now: ") .. Color(SOFT, title .. (ends and (" (ends " .. ends .. ")") or ""))
+            elseif item.daysAway <= 1 then
+                label = Color("FFD100", "Starts " .. (FormatEnd(item.startTime) or "soon") .. ": ") .. Color(SOFT, title)
             else
                 label = Color("FFD100", "In " .. item.daysAway .. " days: ") .. Color(SOFT, title)
             end
@@ -1200,6 +1230,28 @@ local function Render(items)
     end
 
     popup:SetHeight(-y + 18)
+
+    -- If something starts or ends while the popup is open, refresh right after
+    local today = C_DateAndTime.GetCurrentCalendarTime()
+    local now, soonest = ToEpoch(today), nil
+    for _, item in ipairs(items) do
+        -- The next moment something starts or ends
+        for _, moment in ipairs({ item.startEpoch or 0, item.endEpoch or 0 }) do
+            if now and moment > now then
+                soonest = math.min(soonest or moment, moment)
+            end
+        end
+    end
+    refreshToken = (refreshToken or 0) + 1
+    if soonest and soonest - now < 12 * 3600 then
+        local token = refreshToken
+        C_Timer.After(soonest - now + 5, function()
+            if token == refreshToken and popup:IsShown() then
+                lastItems = ScanCalendar()
+                Render(lastItems)
+            end
+        end)
+    end
 
     -- Some collection data wasn't ready; try again shortly (a few times at most)
     if pendingData and retryCount < 5 then
