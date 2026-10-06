@@ -29,9 +29,11 @@ Built after missing Pirates' Day (and the Jolly Roger) five days after hitting e
 
 ## Holidays covered
 
-Full cards: Brewfest, Hallow's End, Day of the Dead, Pilgrim's Bounty, Darkmoon Faire, Pirates' Day, and The Great Gnomeregan Run.
+Full cards: Brewfest, Hallow's End, Day of the Dead, Pilgrim's Bounty, Feast of Winter Veil, Darkmoon Faire, and Pirates' Day. (more to come)
 
-Every other holiday (Winter Veil, Lunar Festival, Love is in the Air, Noblegarden, Children's Week, Midsummer, WoW's Anniversary, and Darkspear Dash) has a themed card, with full details added before each one arrives.
+Micro-holidays: The Great Gnomeregan Run, Moonkin Festival, Wanderer's Festival, and New Year's Fireworks. (more to come)
+
+Every other holiday (Lunar Festival, Love is in the Air, Noblegarden, Children's Week, Midsummer, WoW's Anniversary, and Darkspear Dash) has a themed card, with full details added before each one arrives.
 
 ## Commands
 
