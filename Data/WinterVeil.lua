@@ -99,11 +99,23 @@ HH.Holidays.WinterVeil = {
         { item = 210432, kind = "reminder", name = "Highland Drake: Winter Veil Armor", cost = "Stolen Present" },
     },
 
-    -- Treats for Greatfather Winter: 5 Gingerbread Cookies and an Ice Cold Milk
-    shoppingFor = "Greatfather Winter's treats",
-    shopping = {
-        { item = 17197, count = 5, name = "Gingerbread Cookie", where = "cook them, or check the Auction House" },
-        { item = 1179,  count = 1, name = "Ice Cold Milk",      where = "innkeeper" },
+    -- Two shopping lines: the treats themselves, and what you need to bake the cookies
+    shoppingLists = {
+        {
+            title = "Greatfather Winter's treats",
+            items = {
+                { item = 17197, count = 5, name = "Gingerbread Cookie", where = "bake them (see below), or check the Auction House" },
+                { item = 1179,  count = 1, name = "Ice Cold Milk",      where = "innkeeper" },
+            },
+        },
+        {
+            title = "Bake the cookies",
+            note  = "Learn Recipe: Gingerbread Cookie from a Smokywood Pastures vendor (Cooking 1). Each cookie takes one Small Egg and one Holiday Spices.",
+            items = {
+                { item = 6889,  count = 5, name = "Small Egg",      where = "Auction House, or dragonhawks in Eversong Woods" },
+                { item = 17194, count = 5, name = "Holiday Spices", where = "Smokywood Pastures vendor" },
+            },
+        },
     },
 
     tip = {
