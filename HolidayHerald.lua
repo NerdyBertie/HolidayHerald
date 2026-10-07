@@ -107,8 +107,31 @@ local function Color(hex, text)
     return "|cff" .. hex .. text .. "|r"
 end
 
+-- Text in a holiday's own title style: its gradient, its stripes, or its main color
+local function ThemedText(text, colors)
+    colors = colors or DEFAULT_COLORS
+    if colors.titleGradient then return GradientText(text, colors.titleGradient) end
+    if colors.titleStripes then return StripeText(text, colors.titleStripes) end
+    return Color(colors.main, text)
+end
+
+-- The chat prefix wears the colors of the next holiday coming up (set after each calendar scan)
+local chatTheme = nil
+
+-- With no holiday to borrow colors from, the prefix wears your faction's colors
+local FACTION_THEMES = {
+    Alliance = { main = "3F8CFF", titleGradient = { "3F8CFF", "A9C8F0", "E3C27A" } },   -- blue -> silver -> gold
+    Horde    = { main = "C41E3A", titleGradient = { "C41E3A", "E0566A", "E3A43C" } },   -- crimson -> ember -> gold
+    Neutral  = { main = "E3C27A", titleGradient = { "E3C27A", "C41E3A", "3F8CFF" } },   -- gold -> Horde red -> Alliance blue
+}
+
+local function FactionTheme()
+    if HolidayHeraldDB and not HolidayHeraldDB.showThemes then return nil end
+    return FACTION_THEMES[UnitFactionGroup("player") or "Neutral"] or FACTION_THEMES.Neutral
+end
+
 local function Print(msg)
-    print(Color(DEFAULT_COLORS.main, "Holiday Herald:") .. " " .. msg)
+    print(ThemedText("Holiday Herald:", chatTheme or FactionTheme()) .. " " .. msg)
 end
 
 local function FormatDate(t)
@@ -325,6 +348,7 @@ local function RequestAllItems()
         for field in pairs(LIST_KINDS) do RequestItems(data[field]) end
         if data.boss then RequestItems(data.boss.drops) end
         RequestItems(data.shopping)
+        for _, list in ipairs(data.shoppingLists or {}) do RequestItems(list.items) end
     end
 end
 
@@ -417,6 +441,26 @@ local function ScanCalendar()
             end
         end
     end
+
+    -- Pick whose colors the chat prefix wears, in this order:
+    -- the next big holiday coming up, then the next micro-holiday coming up,
+    -- then a big holiday that's on now, then a micro-holiday that's on now
+    local nextBig, nextMicro, nowBig, nowMicro
+    local function Sooner(a, b) return not b or (a.startEpoch or 0) < (b.startEpoch or 0) end
+    for _, item in ipairs(items) do
+        if item.data and item.data.colors then
+            local big = (item.category == "holiday")
+            if item.started == false then
+                if big and Sooner(item, nextBig) then nextBig = item end
+                if not big and Sooner(item, nextMicro) then nextMicro = item end
+            else
+                if big and not nowBig then nowBig = item end
+                if not big and not nowMicro then nowMicro = item end
+            end
+        end
+    end
+    local pick = nextBig or nextMicro or nowBig or nowMicro
+    chatTheme = (HolidayHeraldDB.showThemes and pick) and pick.data.colors or nil
     return items
 end
 
@@ -509,7 +553,7 @@ end
 ---------------------------------------------------------------------------
 local COUNT_LABELS = {
     achievements = { label = "Achievements" },
-    reminders    = { label = "Also on sale", unit = "item", units = "items" },
+    reminders    = { label = "Also look for", unit = "item", units = "items" },   -- things the game can't check for us
     mounts       = { label = "Mounts" },
     toys         = { label = "Toys" },
     pets         = { label = "Pets" },
@@ -647,7 +691,12 @@ local function BuildLines(item)
         local bossDone = (total > 0 and owned == total and reminders == 0)
 
         local status
-        if boss.lfg and GetLFGDungeonRewards then
+        local active = (item.daysAway == 0 and item.started ~= false)
+        if boss.lfg and not active then
+            -- The holiday dungeon isn't open yet, and the game reports it as "done"
+            -- until it is, so don't trust (or record) anything before it starts
+            status = "\n" .. Color(GRAY, "Opens when the holiday starts")
+        elseif boss.lfg and GetLFGDungeonRewards then
             local doneToday = GetLFGDungeonRewards(boss.lfg)
             local now = GetServerTime()
             if doneToday then
@@ -699,35 +748,42 @@ local function BuildLines(item)
         }
     end
 
+    -- Shopping lines. A holiday can have one list (shopping + shoppingFor) or several
+    -- (shoppingLists), like "Greatfather Winter's treats" plus "Bake the cookies".
+    local lists = data.shoppingLists
+    if not lists and data.shopping then
+        lists = { { title = data.shoppingFor, items = data.shopping, byProfession = data.shoppingByProfession } }
+    end
+    local mine = MyProfessionSkillLines()
+    for listIndex, list in ipairs(HolidayHeraldDB.showTips and lists or {}) do
     -- Only list items for this character's professions (items without one always show)
     local shopping = {}
-    if HolidayHeraldDB.showTips and data.shopping then
-        local mine = MyProfessionSkillLines()
-        for _, buy in ipairs(data.shopping) do
-            if not buy.skillLine or mine[buy.skillLine] then shopping[#shopping + 1] = buy end
-        end
+    for _, buy in ipairs(list.items) do
+        if not buy.skillLine or mine[buy.skillLine] then shopping[#shopping + 1] = buy end
     end
+    local listTitle = list.title
 
     if #shopping > 0 then
         local names = {}
         for _, buy in ipairs(shopping) do
             names[#names + 1] = Color(colors.accent, (buy.count and (buy.count .. "x ") or "") .. buy.name)
         end
-        local key = data.key or name
+        local key = (data.key or name) .. "#" .. listIndex
         shoppingNext[key] = shoppingNext[key] or 1
         howTo[#howTo + 1] = {
             icon = C_Item.GetItemIconByID(shopping[1].item) or ICONS.collect,
-            text = (data.shoppingFor and (data.shoppingFor .. ": bring ") or "Bring along: ")
+            text = (listTitle and (listTitle .. ": bring ") or "Bring along: ")
                 .. table.concat(names, " + "),
             tooltip = function(tt)
-                tt:AddLine(data.shoppingFor or "Bring along", Hex(colors.main))
+                tt:AddLine(listTitle or "Bring along", Hex(colors.main))
                 for _, buy in ipairs(shopping) do
                     tt:AddDoubleLine((buy.count and (buy.count .. "x ") or "") .. buy.name, "ID " .. buy.item, 1, 1, 1, 0.72, 0.68, 0.61)
                     local detail = buy.where
                     if buy.profession then detail = buy.profession .. (detail and (": " .. detail) or "") end
                     if detail then tt:AddLine("   " .. detail, 0.72, 0.68, 0.61) end
                 end
-                if data.shoppingByProfession then
+                if list.note then tt:AddLine(list.note, 1, 1, 1, true) end
+                if list.byProfession then
                     tt:AddLine("Showing only what your professions need.", 0.55, 0.52, 0.47, true)
                 end
                 if shoppingNext[key] > #shopping then shoppingNext[key] = 1 end
@@ -762,6 +818,7 @@ local function BuildLines(item)
                 shoppingNext[key] = (shoppingNext[key] % #shopping) + 1
             end,
         }
+    end
     end
 
     for _, cl in ipairs(HolidayHeraldDB.showClass and data.classLines or {}) do
@@ -1328,7 +1385,9 @@ local function HandleLogin()
         for _, item in ipairs(holidays) do seen[item.key] = true end
         local names = {}
         for _, item in ipairs(holidays) do
-            names[#names + 1] = (item.data.name or item.title) .. (item.daysAway == 0 and "" or (" in " .. item.daysAway .. " days"))
+            local colors = HolidayHeraldDB.showThemes and item.data.colors or DEFAULT_COLORS
+            names[#names + 1] = ThemedText(item.data.name or item.title, colors)
+                .. (item.daysAway == 0 and "" or (" in " .. item.daysAway .. " days"))
         end
         Print(table.concat(names, ", ") .. ". " .. OPEN_LINK)
     end
@@ -1337,6 +1396,9 @@ local function HandleLogin()
     for _, item in ipairs(items) do
         if HolidayHeraldDB.microChat and item.category == "micro" and item.daysAway == 0 and not seen[item.key] then
             local name = (item.data and item.data.name) or item.title
+            if item.data and item.data.colors and HolidayHeraldDB.showThemes then
+                name = ThemedText(name, item.data.colors)
+            end
             local tip = (item.data and item.data.tip and HolidayHeraldDB.showTips) and (" " .. item.data.tip.short) or ""
             Print("today's micro-holiday is " .. name .. "." .. tip .. " " .. OPEN_LINK)
             seen[item.key] = true

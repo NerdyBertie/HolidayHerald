@@ -37,4 +37,5 @@ Data\DarkspearDash.lua
 Data\MoonkinFestival.lua
 Data\WanderersFestival.lua
 Data\FireworksCelebration.lua
+Data\CallOfTheScarab.lua
 HolidayHerald.lua

@@ -1,5 +1,19 @@
 # Holiday Herald
 
+## v1.6.0
+
+### New
+- Lunar Festival is now a full card: the To Honor One's Elders meta, the Lunar Launcher mount, 13 toys, both lantern pets, festive transmog and flower crowns, Zidormi locations for hidden Elders, how to summon Omen, and three secrets.
+- Call of the Scarab (January 21 to 23) now has a micro-holiday card: how to help your faction in Silithus, the temporary Qiraji mounts, and two secrets.
+
+### Improvements
+- Chat messages are dressed up too: each holiday's name appears in its own colors, and the "Holiday Herald:" prefix wears the colors of the next holiday coming up (or the next micro-holiday, when no big holiday is close). With nothing coming up at all, it wears your faction's colors: blue for the Alliance, red for the Horde.
+- "Also on sale" is now "Also look for", since some of those items drop instead of being sold.
+- Holidays can now have more than one shopping line. Winter Veil gets a second one with the Small Eggs and Holiday Spices to bake the Gingerbread Cookies yourself, ready to Ctrl-click into ItemWatch.
+
+### Fixes
+- Holiday boss lines no longer say "used today" and "done" before the holiday has even started. Until it opens, they say "Opens when the holiday starts."
+
 ## v1.5.1
 
 ### Fixes
