@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.6.1
+
+### Improvements
+- The Great Gnomeregan Run: tracks the new Gnomatic Projector toy, mentions the Runner of the Gnomes speed buff, and has more exact coordinates for Mina Gleespanner.
+
 ## v1.6.0
 
 ### New
