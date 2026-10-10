@@ -18,17 +18,22 @@ HH.Holidays.GreatGnomereganRun = {
         titleGradient = { "E86FB0", "4FC3C9" },   -- gnome pink -> tinker teal
     },
 
+    toys = {
+        { item = 267472, name = "Gnomatic Projector", cost = "The Great Gnomeregan Run quest",
+          note = "Gnomes and Mechagnomes only. Its cooldown drops to 10 minutes during the race." },
+    },
+
     tip = {
         short = "Alliance only: race 34 gates from New Tinkertown to Booty Bay!",
         hover = {
             "#Start",
-            "Accept The Great Gnomeregan Run from Mina Gleespanner in New Tinkertown, Dun Morogh (36.5, 36.5).",
+            "Accept The Great Gnomeregan Run from Mina Gleespanner in New Tinkertown, Dun Morogh (36.4, 36.6).",
             " ",
             "#The route",
             "Dun Morogh, Ironforge, the Deeprun Tram, Stormwind, Elwynn Forest, Duskwood, and Stranglethorn Vale. Course markers and cheering fans point the way, and every gate bursts into fireworks.",
             " ",
             "#Finish",
-            "Turn in the quest to Prince Erazmin at the finish line in Booty Bay.",
+            "Turn in the quest to Prince Erazmin at the finish line in Booty Bay. You'll get Runner of the Gnomes (+30% outdoor movement speed for a day) and the Gnomatic Projector toy, which summons a Holo-Gnome of yourself.",
             " ",
             "#Safety tip",
             "Stranglethorn is dangerous for low-level gnomes. Bring a bodyguard, or play chaperone on a higher-level character!",
