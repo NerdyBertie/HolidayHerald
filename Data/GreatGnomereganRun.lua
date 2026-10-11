@@ -20,7 +20,8 @@ HH.Holidays.GreatGnomereganRun = {
 
     toys = {
         { item = 267472, name = "Gnomatic Projector", cost = "The Great Gnomeregan Run quest",
-          note = "Gnomes and Mechagnomes only. Its cooldown drops to 10 minutes during the race." },
+          races = { "Gnome", "Mechagnome" },
+          note = "Only Gnomes and Mechagnomes get this one. Its cooldown drops to 10 minutes during the race." },
     },
 
     tip = {
@@ -33,7 +34,7 @@ HH.Holidays.GreatGnomereganRun = {
             "Dun Morogh, Ironforge, the Deeprun Tram, Stormwind, Elwynn Forest, Duskwood, and Stranglethorn Vale. Course markers and cheering fans point the way, and every gate bursts into fireworks.",
             " ",
             "#Finish",
-            "Turn in the quest to Prince Erazmin at the finish line in Booty Bay. You'll get Runner of the Gnomes (+30% outdoor movement speed for a day) and the Gnomatic Projector toy, which summons a Holo-Gnome of yourself.",
+            "Turn in the quest to Prince Erazmin at the finish line in Booty Bay. You'll get Runner of the Gnomes (+30% outdoor movement speed for a day) and, if you're a Gnome or Mechagnome, the Gnomatic Projector toy, which summons a Holo-Gnome of yourself.",
             " ",
             "#Safety tip",
             "Stranglethorn is dangerous for low-level gnomes. Bring a bodyguard, or play chaperone on a higher-level character!",
@@ -49,6 +50,14 @@ HH.Holidays.GreatGnomereganRun = {
                 "Every October (breast cancer awareness month), players roll level 1 gnomes with pink hair and run this same route together, raising money for breast cancer charities. It grew so popular that Blizzard asked permission to turn it into an official holiday.",
                 " ",
                 "The community run still happens each year on the Scarlet Crusade (US) server. And look for a goggle-wearing Supporter along the route: its look is based on the charity run's mascot!",
+            },
+        },
+        {
+            teaser = "Secret: Holo-Gnomes love a group photo...",
+            reveal = {
+                "Gather your Gnomish fellows at the finish line and all use your Gnomatic Projectors at once.",
+                " ",
+                "Each new Holo-Gnome climbs onto the shoulders of the last one, building a wobbly tower of tiny holograms... until someone goes \"woah!\" and it all comes tumbling down.",
             },
         },
     },
