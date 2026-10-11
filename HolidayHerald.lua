@@ -278,9 +278,20 @@ local pendingData = false     -- set when something checkable hasn't loaded yet
 -- Returns: owned, total checkable, reminders (can never be checked)
 -- Checkable items that haven't loaded yet count as not owned for now,
 -- and trigger a redraw once their data arrives.
--- Entries can be marked faction = "Alliance" or "Horde"; others are skipped
+-- Entries can be marked faction = "Alliance" or "Horde", and/or
+-- races = { "Gnome", ... } (English race names); others are skipped
 local function ForMyFaction(entry)
-    return not entry.faction or entry.faction == UnitFactionGroup("player")
+    if entry.faction and entry.faction ~= UnitFactionGroup("player") then
+        return false
+    end
+    if entry.races then
+        local _, myRace = UnitRace("player")
+        for _, race in ipairs(entry.races) do
+            if race == myRace then return true end
+        end
+        return false
+    end
+    return true
 end
 
 local function CountOwned(list)
@@ -727,7 +738,12 @@ local function BuildLines(item)
 
     -- Collection counts: unfinished ones listed, finished ones folded into "Done"
     for _, field in ipairs(COUNT_ORDER) do
+        local _, total, reminders = 0, 0, 0
         if data[field] and #data[field] > 0 then
+            _, total, reminders = CountOwned(data[field])
+        end
+        -- skip lists where nothing applies to this character (race/faction-only items)
+        if total + reminders > 0 then
             hasGoals = true
             local spec, isDone = CountLine(name, field, data[field], colors)
             if isDone then
@@ -1383,13 +1399,25 @@ local function HandleLogin()
         for _, item in ipairs(holidays) do seen[item.key] = true end
     elseif #holidays > 0 then
         for _, item in ipairs(holidays) do seen[item.key] = true end
-        local names = {}
+        -- "Now: A (ends today at 11:59 PM). Coming up: B in 9 days."
+        local onNow, comingUp = {}, {}
         for _, item in ipairs(holidays) do
             local colors = HolidayHeraldDB.showThemes and item.data.colors or DEFAULT_COLORS
-            names[#names + 1] = ThemedText(item.data.name or item.title, colors)
-                .. (item.daysAway == 0 and "" or (" in " .. item.daysAway .. " days"))
+            local name = ThemedText(item.data.name or item.title, colors)
+            if item.started then
+                local ends = FormatEnd(item.endTime)
+                onNow[#onNow + 1] = name .. (ends and (" (ends " .. ends .. ")") or "")
+            elseif item.daysAway == 0 then
+                comingUp[#comingUp + 1] = name .. " later today"
+            else
+                comingUp[#comingUp + 1] = name .. " in " .. item.daysAway
+                    .. (item.daysAway == 1 and " day" or " days")
+            end
         end
-        Print(table.concat(names, ", ") .. ". " .. OPEN_LINK)
+        local parts = {}
+        if #onNow > 0 then parts[#parts + 1] = "Now: " .. table.concat(onNow, ", ") .. "." end
+        if #comingUp > 0 then parts[#parts + 1] = "Coming up: " .. table.concat(comingUp, ", ") .. "." end
+        Print(table.concat(parts, " ") .. " " .. OPEN_LINK)
     end
 
     -- Micro-holidays: one chat line on the day

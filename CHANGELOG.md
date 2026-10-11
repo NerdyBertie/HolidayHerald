@@ -1,5 +1,14 @@
 # Holiday Herald
 
+## v1.6.2
+
+### Improvements
+- New Great Gnomeregan Run secret about stacking Holo-Gnomes.
+- The login chat line now separates what's on now (with its end time) from what's coming up, so it no longer reads like everything starts in a few days.
+
+### Fixes
+- The Gnomatic Projector only shows on Gnome and Mechagnome characters, since only they get it from the race.
+
 ## v1.6.1
 
 ### Improvements
