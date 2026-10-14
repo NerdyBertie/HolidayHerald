@@ -251,16 +251,29 @@ local function FirstAchievementInCategory(categoryName)
     end
 end
 
--- The holiday's own achievement category (like World Events > Hallow's End),
--- found by name or from the holiday's meta achievement
+-- The holiday's own achievement category (like World Events > Hallow's End).
+-- Uses the data file's achievementCategory if it has one, otherwise looks for a
+-- World Events subcategory whose name matches the holiday ("Feast of Winter Veil"
+-- matches "Winter Veil"). Holidays without their own subcategory return nil.
+local WORLD_EVENTS = 155
 local function HolidayCategoryID(data)
-    if data.achievementCategory then
-        for _, categoryID in ipairs(GetCategoryList() or {}) do
-            if GetCategoryInfo(categoryID) == data.achievementCategory then return categoryID end
+    local best, bestLength
+    local holidayName = (data.name or ""):lower()
+    for _, categoryID in ipairs(GetCategoryList() or {}) do
+        local title, parent = GetCategoryInfo(categoryID)
+        if title then
+            if data.achievementCategory then
+                if title == data.achievementCategory then return categoryID end
+            elseif parent == WORLD_EVENTS then
+                local lower = title:lower()
+                if (lower == holidayName or holidayName:find(lower, 1, true))
+                        and (not bestLength or #lower > bestLength) then
+                    best, bestLength = categoryID, #lower
+                end
+            end
         end
     end
-    local meta = data.meta and data.meta.holidayMeta
-    if meta and GetAchievementCategory then return GetAchievementCategory(meta) end
+    return best
 end
 
 -- Everything in the holiday's achievement category, plus any extras the data
@@ -685,8 +698,9 @@ local function AchievementToOpen(list, data)
     end
     local linkTarget = firstUnfinished or firstUnfinishedFeat or first
     if firstUnfinished then return firstUnfinished, linkTarget end
-    local holidayList = data and ((data.meta and data.meta.holidayMeta)
-        or (data.achievementCategory and FirstAchievementInCategory(data.achievementCategory)))
+    local category = data and HolidayCategoryID(data)
+    local holidayList = (category and GetAchievementInfo(category, 1))
+        or (data and data.meta and data.meta.holidayMeta)
     return holidayList or linkTarget, linkTarget
 end
 
