@@ -606,26 +606,56 @@ local DONE_ICON = "|TInterface\\RaidFrame\\ReadyCheck-Ready:12:12|t "
 
 -- Picks the achievement to open from a list: the first one not yet earned,
 -- or the first one if they're all done
-local function AchievementToOpen(list)
-    local first
+-- Feats of Strength (and its subcategories, like Promotions) live under category 81
+local FEATS_OF_STRENGTH = 81
+local function IsFeat(id)
+    local category = GetAchievementCategory and GetAchievementCategory(id)
+    while category and category > 0 do
+        if category == FEATS_OF_STRENGTH then return true end
+        local _, parent = GetCategoryInfo(category)
+        if parent == category then break end
+        category = parent
+    end
+    return false
+end
+
+-- Which achievement a click should open. Prefers the first unfinished one,
+-- but skips Feats of Strength when the holiday has its own achievement list
+-- (World Events), so clicking lands on the holiday instead of a feats page.
+-- Returns the one to open, and the one to link with shift-click.
+local function AchievementToOpen(list, data)
+    local first, firstUnfinished, firstUnfinishedFeat
     for _, entry in ipairs(list or {}) do
         if entry.achievement and ForMyFaction(entry) then
             first = first or entry.achievement
-            if not AchievementDone(entry.achievement) then return entry.achievement end
+            if not AchievementDone(entry.achievement) then
+                if IsFeat(entry.achievement) then
+                    firstUnfinishedFeat = firstUnfinishedFeat or entry.achievement
+                else
+                    firstUnfinished = firstUnfinished or entry.achievement
+                end
+            end
         end
     end
-    return first
+    local linkTarget = firstUnfinished or firstUnfinishedFeat or first
+    if firstUnfinished then return firstUnfinished, linkTarget end
+    local holidayList = data and ((data.meta and data.meta.holidayMeta)
+        or (data.achievementCategory and FirstAchievementInCategory(data.achievementCategory)))
+    return holidayList or linkTarget, linkTarget
 end
 
-local function AchievementClick(id)
+local function AchievementClick(id, linkID)
     return function()
-        if not id then return end
-        if IsShiftKeyDown() then LinkAchievement(id) else OpenAchievement(id) end
+        if IsShiftKeyDown() then
+            if linkID or id then LinkAchievement(linkID or id) end
+        elseif id then
+            OpenAchievement(id)
+        end
     end
 end
 
 -- Returns a count line spec, and whether that category is finished
-local function CountLine(holidayName, field, list, colors)
+local function CountLine(holidayName, field, list, colors, data)
     local info = COUNT_LABELS[field]
     local owned, total, reminders = CountOwned(list)
     local right, done
@@ -643,10 +673,10 @@ local function CountLine(holidayName, field, list, colors)
         doneLabel = info.label,
     }
     if field == "achievements" then
-        local target = AchievementToOpen(list)
+        local target, linkTarget = AchievementToOpen(list, data)
         spec.tooltip = ListTooltip(holidayName .. ": " .. info.label, list, colors,
             { "Click: open in the achievement window. Shift-click: link it in chat." })
-        spec.onClick = AchievementClick(target)
+        spec.onClick = AchievementClick(target, linkTarget)
     end
     return spec, done
 end
@@ -774,7 +804,7 @@ local function BuildLines(item)
         -- skip lists where nothing applies to this character (race/faction-only items)
         if total + reminders > 0 then
             hasGoals = true
-            local spec, isDone = CountLine(name, field, data[field], colors)
+            local spec, isDone = CountLine(name, field, data[field], colors, data)
             if isDone then
                 done[#done + 1] = spec.doneLabel
                 doneTooltips[#doneTooltips + 1] = spec
@@ -894,7 +924,7 @@ local function BuildLines(item)
         specs[#specs + 1] = { text = Color(GRAY, DONE_ICON .. "Everything here is collected. All done! Grats!") }
     else
         if #done > 0 then
-            local target = AchievementToOpen(data.achievements)
+            local target = AchievementToOpen(data.achievements, data)
                 or (data.meta and data.meta.holidayMeta)
             toGet[#toGet + 1] = {
                 text = Color(GRAY, DONE_ICON .. "Done: " .. table.concat(done, ", ")),

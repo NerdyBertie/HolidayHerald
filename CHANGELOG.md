@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.6.4
+
+### Fixes
+- Clicking a holiday's Achievements line no longer jumps to Feats of Strength. If the only ones left are feats (like Hallow's End's), it opens the holiday's own achievement list instead. Shift-click still links the next one you need.
+
 ## v1.6.3
 
 ### New
