@@ -26,6 +26,7 @@ local DB_DEFAULTS = {
     showMinimap  = true,
     achievementToast = true,   -- a small toast for every achievement
     showTradingPost  = true,   -- Trading Post reminder under Weekly Events
+    timeDisplay  = "realm",    -- start/end times: "realm", "local", or "both"
 }
 local FANFARE_SOUND_ID     = 888    -- level-up fanfare (VERIFY sound choice)
 local BIG_FANFARE_SOUND_ID = 888    -- for the Violet Proto-Drake (VERIFY sound choice)
@@ -145,19 +146,47 @@ local function ToEpoch(t)
                   hour = t.hour or 0, min = t.minute or 0 })
 end
 
--- "Oct 10 at 11:59 PM", or "today at 7:00 AM" / "tomorrow at 7:00 AM" when it's that close
-local function FormatEnd(t)
-    if not t or not t.month then return nil end
-    local today = C_DateAndTime.GetCurrentCalendarTime()
-    local tomorrow = C_DateAndTime.AdjustTimeByDays(today, 1)
+-- "Oct 10 at 11:59 PM", or "today at 7:00 AM" / "tomorrow at 7:00 AM" when it's that close.
+-- t and today are { year, month, monthDay, hour, minute } tables.
+local function FormatMoment(t, today)
+    local tomorrow = date("*t", time({ year = today.year, month = today.month, day = today.monthDay + 1, hour = 12 }))
     local hour, minute = t.hour or 0, t.minute or 0
     local clock = ("%d:%02d %s"):format((hour % 12 == 0) and 12 or (hour % 12), minute, hour < 12 and "AM" or "PM")
     if t.year == today.year and t.month == today.month and t.monthDay == today.monthDay then
         return "today at " .. clock
-    elseif t.year == tomorrow.year and t.month == tomorrow.month and t.monthDay == tomorrow.monthDay then
+    elseif t.year == tomorrow.year and t.month == tomorrow.month and t.monthDay == tomorrow.day then
         return "tomorrow at " .. clock
     end
     return FormatDate(t) .. " at " .. clock
+end
+
+-- How far your computer's clock is ahead of the realm's, rounded to 15 minutes
+local function LocalOffset()
+    local realmNow = ToEpoch(C_DateAndTime.GetCurrentCalendarTime())
+    if not realmNow then return 0 end
+    return math.floor((time() - realmNow) / 900 + 0.5) * 900
+end
+
+-- Calendar times are realm time. Depending on the setting, show them as
+-- realm time, your own time, or both
+local function FormatEnd(t)
+    if not t or not t.month then return nil end
+    local realmText = FormatMoment(t, C_DateAndTime.GetCurrentCalendarTime())
+    local mode = HolidayHeraldDB.timeDisplay or "realm"
+    local offset = LocalOffset()
+    if mode == "realm" or offset == 0 then return realmText end
+
+    local lt = date("*t", ToEpoch(t) + offset)
+    local now = date("*t")
+    local localText = FormatMoment(
+        { year = lt.year, month = lt.month, monthDay = lt.day, hour = lt.hour, minute = lt.min },
+        { year = now.year, month = now.month, monthDay = now.day })
+    if mode == "local" then return localText end
+
+    -- Both: "today at 9:00 PM (11:00 PM your time)", or with the day when it differs:
+    -- "today at 11:59 PM (tomorrow at 1:59 AM your time)"
+    local sameDay = realmText:match("^(.-) at ") == localText:match("^(.-) at ")
+    return realmText .. " (" .. (sameDay and localText:match(" at (.+)$") or localText) .. " your time)"
 end
 
 local function ItemName(entry)
@@ -1284,7 +1313,7 @@ local function Render(items)
             end
             if item.daysAway == 0 and item.started ~= false then
                 local ends = FormatEnd(item.endTime)
-                label = Color("33FF33", "Now: ") .. Color(SOFT, title .. (ends and (" (ends " .. ends .. ")") or ""))
+                label = Color("33FF33", "Now: ") .. Color(SOFT, title .. (ends and (", ends " .. ends) or ""))
             elseif item.daysAway <= 1 then
                 label = Color("FFD100", "Starts " .. (FormatEnd(item.startTime) or "soon") .. ": ") .. Color(SOFT, title)
             else
@@ -1399,14 +1428,14 @@ local function HandleLogin()
         for _, item in ipairs(holidays) do seen[item.key] = true end
     elseif #holidays > 0 then
         for _, item in ipairs(holidays) do seen[item.key] = true end
-        -- "Now: A (ends today at 11:59 PM). Coming up: B in 9 days."
+        -- "Now: A, ends today at 11:59 PM. Coming up: B in 9 days."
         local onNow, comingUp = {}, {}
         for _, item in ipairs(holidays) do
             local colors = HolidayHeraldDB.showThemes and item.data.colors or DEFAULT_COLORS
             local name = ThemedText(item.data.name or item.title, colors)
             if item.started then
                 local ends = FormatEnd(item.endTime)
-                onNow[#onNow + 1] = name .. (ends and (" (ends " .. ends .. ")") or "")
+                onNow[#onNow + 1] = name .. (ends and (", ends " .. ends) or "")
             elseif item.daysAway == 0 then
                 comingUp[#comingUp + 1] = name .. " later today"
             else
@@ -1415,7 +1444,7 @@ local function HandleLogin()
             end
         end
         local parts = {}
-        if #onNow > 0 then parts[#parts + 1] = "Now: " .. table.concat(onNow, ", ") .. "." end
+        if #onNow > 0 then parts[#parts + 1] = "Now: " .. table.concat(onNow, "; ") .. "." end
         if #comingUp > 0 then parts[#parts + 1] = "Coming up: " .. table.concat(comingUp, ", ") .. "." end
         Print(table.concat(parts, " ") .. " " .. OPEN_LINK)
     end
@@ -1789,24 +1818,24 @@ local function BuildSettings()
         layout:AddInitializer(CreateSettingsButtonInitializer(label, buttonText, onClick, tooltip, true))
     end
 
-    Header("Quick presets")
+    Header("Quick setup: how loud Holiday Herald is")
     do
         -- A dropdown that shows the preset currently in use ("Custom" once you
         -- change individual settings), and applies a preset when you pick one.
         local setting = Settings.RegisterProxySetting(category, "HolidayHerald_preset", "string",
-            "Preset", "all", CurrentPreset, function(value) ApplyPreset(value) end)
+            "Alerts and sounds", "all", CurrentPreset, function(value) ApplyPreset(value) end)
         local function GetOptions()
             local container = Settings.CreateControlTextContainer()
-            container:Add("all", "All on", "Everything on, sounds included.")
-            container:Add("visuals", "Visuals only", "All messages and toasts, no sounds.")
-            container:Add("quiet", "Quiet", "Just the popup and chat lines. No alerts or toasts.")
+            container:Add("all", "All on (alerts + sounds)", "Everything on, sounds included.")
+            container:Add("visuals", "Visuals only (no sounds)", "All messages and toasts, no sounds.")
+            container:Add("quiet", "Quiet (popup + chat only)", "Just the popup and chat lines. No alerts or toasts.")
             if CurrentPreset() == "custom" then
-                container:Add("custom", "Custom", "You've changed individual settings below.")
+                container:Add("custom", "Custom (your own picks)", "You've changed individual settings below.")
             end
             return container:GetData()
         end
         CreateDropdown(category, setting, GetOptions,
-            "Shows which preset is in use. Pick one to apply it. Changing settings below switches this to Custom.")
+            "A one-click way to set how loud Holiday Herald is. All on: every alert, toast, and sound. Visuals only: the same, but silent. Quiet: just the popup and chat lines. Changing a setting below switches this to Custom.")
     end
 
     Header("Popup")
@@ -1819,6 +1848,20 @@ local function BuildSettings()
         local options = Settings.CreateSliderOptions(1, 14, 1)
         options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
         Settings.CreateSlider(category, setting, options, "How many days ahead to list upcoming holidays.")
+    end
+    do
+        local setting = Settings.RegisterAddOnSetting(category, "HolidayHerald_timeDisplay", "timeDisplay",
+            HolidayHeraldDB, "string", "Start and end times", DB_DEFAULTS.timeDisplay)
+        settingObjects.timeDisplay = setting
+        local function GetOptions()
+            local container = Settings.CreateControlTextContainer()
+            container:Add("both", "Server time + (your time)")
+            container:Add("realm", "Server time only")
+            container:Add("local", "Your time only")
+            return container:GetData()
+        end
+        CreateDropdown(category, setting, GetOptions,
+            "Holiday times follow the server's clock, like the in-game calendar. Show server time, your computer's time, or server time with yours after it. If the two clocks match, you'll only see one time.")
     end
     do
         local setting = Checkbox("showMinimap", "Minimap button", "Show the Holiday Herald button on the minimap.")

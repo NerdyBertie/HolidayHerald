@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120100, 120105
 ## Title: Holiday Herald
 ## Notes: Pops up a themed reminder of current and upcoming holidays, what you can still collect, tips, and secrets.
 ## Author: NerdyBertie

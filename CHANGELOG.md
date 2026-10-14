@@ -1,5 +1,16 @@
 # Holiday Herald
 
+## v1.6.3
+
+### New
+- New "Start and end times" option: show holiday times in server time (like the in-game calendar), your own computer's time, or server time with yours after it. Handy when your realm is in a different time zone than you.
+
+### Improvements
+- The presets menu is now labeled "Alerts and sounds," and each choice says what it does right in its name, like "Visuals only (no sounds)."
+
+### Fixes
+- Updated for patch 12.1.5, so the game no longer marks it out of date.
+
 ## v1.6.2
 
 ### Improvements
