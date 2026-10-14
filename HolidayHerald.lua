@@ -251,6 +251,44 @@ local function FirstAchievementInCategory(categoryName)
     end
 end
 
+-- The holiday's own achievement category (like World Events > Hallow's End),
+-- found by name or from the holiday's meta achievement
+local function HolidayCategoryID(data)
+    if data.achievementCategory then
+        for _, categoryID in ipairs(GetCategoryList() or {}) do
+            if GetCategoryInfo(categoryID) == data.achievementCategory then return categoryID end
+        end
+    end
+    local meta = data.meta and data.meta.holidayMeta
+    if meta and GetAchievementCategory then return GetAchievementCategory(meta) end
+end
+
+-- Everything in the holiday's achievement category, plus any extras the data
+-- file lists (like Feats of Strength). Read live from the game, so new
+-- achievements show up without an update. The meta achievements themselves
+-- are left out, since the meta line already covers them.
+local function HolidayAchievements(data)
+    local category = HolidayCategoryID(data)
+    if not category or not GetCategoryNumAchievements then return data.achievements end
+    local list, seen = {}, {}
+    if data.meta then
+        if data.meta.holidayMeta then seen[data.meta.holidayMeta] = true end
+        if data.meta.strangeTrip then seen[data.meta.strangeTrip] = true end
+    end
+    for _, entry in ipairs(data.achievements or {}) do
+        list[#list + 1] = entry
+        if entry.achievement then seen[entry.achievement] = true end
+    end
+    for i = 1, (GetCategoryNumAchievements(category)) or 0 do
+        local id = GetAchievementInfo(category, i)
+        if id and not seen[id] then
+            seen[id] = true
+            list[#list + 1] = { achievement = id, kind = "achievement" }
+        end
+    end
+    return list
+end
+
 -- A clickable item link, even if the item isn't cached yet
 local function ItemLink(id, name)
     local _, link = C_Item.GetItemInfo(id)
@@ -552,10 +590,15 @@ end
 local function ListTooltip(title, list, colors, notes)
     return function(tt)
         tt:AddLine(title, Hex(colors.main))
+        -- Long lists (like a holiday's whole achievement list) only show what's left
+        local hideCollected = #list > 15
+        local hidden = 0
         for _, entry in ipairs(list) do
-          if ForMyFaction(entry) then
+          local state = ForMyFaction(entry) and IsOwned(entry)
+          if hideCollected and state == true then
+            hidden = hidden + 1
+          elseif ForMyFaction(entry) then
             local name = ItemName(entry)
-            local state = IsOwned(entry)
             if entry.kind == "pet" and entry.item and not simulateOwned then
                 local owned, limit = PetInfo(entry)
                 if owned then name = ("%s (%d/%d)"):format(name, owned, limit) end
@@ -577,6 +620,9 @@ local function ListTooltip(title, list, colors, notes)
                 tt:AddLine("   " .. entry.note, 0.72, 0.68, 0.61, true)
             end
           end
+        end
+        if hidden > 0 then
+            tt:AddLine("+ " .. hidden .. " already done", 0.55, 0.52, 0.47)
         end
         for _, note in ipairs(notes or {}) do
             tt:AddLine(" ")
@@ -797,14 +843,15 @@ local function BuildLines(item)
 
     -- Collection counts: unfinished ones listed, finished ones folded into "Done"
     for _, field in ipairs(COUNT_ORDER) do
+        local list = (field == "achievements") and HolidayAchievements(data) or data[field]
         local _, total, reminders = 0, 0, 0
-        if data[field] and #data[field] > 0 then
-            _, total, reminders = CountOwned(data[field])
+        if list and #list > 0 then
+            _, total, reminders = CountOwned(list)
         end
         -- skip lists where nothing applies to this character (race/faction-only items)
         if total + reminders > 0 then
             hasGoals = true
-            local spec, isDone = CountLine(name, field, data[field], colors, data)
+            local spec, isDone = CountLine(name, field, list, colors, data)
             if isDone then
                 done[#done + 1] = spec.doneLabel
                 doneTooltips[#doneTooltips + 1] = spec
@@ -924,7 +971,7 @@ local function BuildLines(item)
         specs[#specs + 1] = { text = Color(GRAY, DONE_ICON .. "Everything here is collected. All done! Grats!") }
     else
         if #done > 0 then
-            local target = AchievementToOpen(data.achievements, data)
+            local target = AchievementToOpen(HolidayAchievements(data), data)
                 or (data.meta and data.meta.holidayMeta)
             toGet[#toGet + 1] = {
                 text = Color(GRAY, DONE_ICON .. "Done: " .. table.concat(done, ", ")),

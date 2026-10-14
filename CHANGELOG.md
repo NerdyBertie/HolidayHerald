@@ -2,6 +2,10 @@
 
 ## v1.6.4
 
+### Improvements
+- A holiday's Achievements line now counts everything in that holiday's achievement list, read straight from the game. New ones Blizzard adds (like this year's neighborhood candy achievements) show up on their own, no update needed.
+- Long lists only show what you still need on hover, with a count of what's already done.
+
 ### Fixes
 - Clicking a holiday's Achievements line no longer jumps to Feats of Strength. If the only ones left are feats (like Hallow's End's), it opens the holiday's own achievement list instead. Shift-click still links the next one you need.
 
