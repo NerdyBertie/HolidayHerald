@@ -28,6 +28,7 @@ local DB_DEFAULTS = {
     showTradingPost  = true,   -- Trading Post reminder under Weekly Events
     timeDisplay  = "realm",    -- start/end times: "realm", "local", or "both"
     showReset    = true,       -- "Daily reset: ..." line under the holiday cards
+    popupOnStart = true,       -- show the popup again on the day a holiday starts
 }
 local FANFARE_SOUND_ID     = 888    -- level-up fanfare (VERIFY sound choice)
 local BIG_FANFARE_SOUND_ID = 888    -- for the Violet Proto-Drake (VERIFY sound choice)
@@ -1644,25 +1645,54 @@ local function ShortAlert(item)
     if HolidayHeraldDB.alertSound then PlaySound(ALERT_SOUND_ID) end
 end
 
+-- While you're playing: if a holiday starts (most begin at midnight or in the
+-- morning), pop up once for it. Waits until you're out of combat.
+local function CheckForNewStarts()
+    if not (HolidayHeraldDB.showPopup and HolidayHeraldDB.popupOnStart) then return end
+    if InCombatLockdown() or popup:IsShown() then return end
+    local seen = HolidayHeraldCharDB.seen
+    local items = ScanCalendar()
+    local fresh = false
+    for _, item in ipairs(items) do
+        if item.category == "holiday" and item.started and not seen[item.key .. "#started"] then
+            fresh = true
+            seen[item.key] = true
+            seen[item.key .. "#started"] = true
+        end
+    end
+    if fresh then
+        Render(items)
+        popup:Show()
+    end
+end
+
 local function HandleLogin()
     local items = ScanCalendar()
     local seen = HolidayHeraldCharDB.seen
     local alerted = HolidayHeraldCharDB.alerted
 
     -- Full popup the first time this character sees a holiday; chat line after
+    -- and again once it actually starts (if that setting is on)
     local holidays, unseen = {}, false
     for _, item in ipairs(items) do
         if item.category == "holiday" then
             holidays[#holidays + 1] = item
             if not seen[item.key] then unseen = true end
+            if HolidayHeraldDB.popupOnStart and item.started and not seen[item.key .. "#started"] then unseen = true end
+        end
+    end
+    local function MarkSeen()
+        for _, item in ipairs(holidays) do
+            seen[item.key] = true
+            if item.started then seen[item.key .. "#started"] = true end
         end
     end
     if unseen and HolidayHeraldDB.showPopup then
         Render(items)
         popup:Show()
-        for _, item in ipairs(holidays) do seen[item.key] = true end
+        MarkSeen()
     elseif #holidays > 0 then
-        for _, item in ipairs(holidays) do seen[item.key] = true end
+        MarkSeen()
         -- "Now: A, ends today at 11:59 PM. Coming up: B in 9 days."
         local onNow, comingUp = {}, {}
         for _, item in ipairs(holidays) do
@@ -2076,6 +2106,8 @@ local function BuildSettings()
     Header("Popup")
     Checkbox("showPopup", "Show popup for new holidays",
         "Show the full popup the first time each character sees a holiday. After that, it's a chat line.")
+    Checkbox("popupOnStart", "Popup when a holiday starts",
+        "Show the popup again on the day a holiday begins, even if you saw it earlier in the week. If you're playing when it starts, it pops up then (after combat).")
     do
         local setting = Settings.RegisterAddOnSetting(category, "HolidayHerald_lookahead", "lookahead",
             HolidayHeraldDB, "number", "Look ahead (days)", DB_DEFAULTS.lookahead)
@@ -2204,6 +2236,7 @@ events:SetScript("OnEvent", function(self, event, arg1)
             if not loginDone then
                 loginDone = true
                 HandleLogin()
+                C_Timer.NewTicker(60, CheckForNewStarts)
             end
         end)
 

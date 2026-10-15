@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.6.6
+
+### New
+- The popup now shows again on the day a holiday starts, not just when it first appears a week ahead. If you're playing when a holiday begins, it pops up then (after combat). Can be turned off with "Popup when a holiday starts" in the settings.
+
 ## v1.6.5
 
 ### New
