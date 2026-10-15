@@ -1,5 +1,21 @@
 # Holiday Herald
 
+## v1.6.5
+
+### New
+- Daily quests line: holidays with dailies now show a checklist of today's quests (like "2 of 10"), grouped by where you do them. It resets with the daily reset. Hallow's End has it first: the city quests, saving a village from the Shade of the Horseman's fires, the Hag of the Crooked Tree in Val'sharah, and the garrison quests for Spooky Supplies.
+- Pilgrim's Bounty: the five cooking dailies are on the Daily quests line, with what each one wants.
+- Feast of Winter Veil: the Greench quests and the four garrison quests for Merry Supplies are on the Daily quests line.
+- WoW's Anniversary: a full card, built from last year's event (achievements, world boss mounts, the Loyal Watchman set and Eternal Tier 2 ensembles, dailies, and where every world boss is). It'll be updated once this year's details are announced.
+- Hallow's End: a new tip explaining how the Shade of the Horseman fires work.
+- The holiday boss tooltip wishes you luck on any mount you're still missing.
+- New "Daily reset" line under the holiday cards, showing when dailies reset (in server time, your time, or both, following the Start and end times setting). Can be turned off in the settings.
+- Drake armor manuscripts (like the Windborne Velocidrake: Hallow's End Armor) and ensembles are now checked off once you've learned them, instead of always showing as still to get.
+- Hallow's End: the Prowler's Faded Headgear ensemble now shows its price (150 Tricky Treats) and which vendors sell it.
+
+### Fixes
+- Tooltips no longer show "Item 226453" style placeholders when the game hasn't loaded an item's name yet. They fill in the names a moment later.
+
 ## v1.6.4
 
 ### Improvements

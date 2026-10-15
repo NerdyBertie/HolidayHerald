@@ -27,6 +27,7 @@ local DB_DEFAULTS = {
     achievementToast = true,   -- a small toast for every achievement
     showTradingPost  = true,   -- Trading Post reminder under Weekly Events
     timeDisplay  = "realm",    -- start/end times: "realm", "local", or "both"
+    showReset    = true,       -- "Daily reset: ..." line under the holiday cards
 }
 local FANFARE_SOUND_ID     = 888    -- level-up fanfare (VERIFY sound choice)
 local BIG_FANFARE_SOUND_ID = 888    -- for the Violet Proto-Drake (VERIFY sound choice)
@@ -52,6 +53,8 @@ local ICONS = {
     mascot   = "Interface\\AddOns\\HolidayHerald\\Media\\mascot",
     teatime  = "Interface\\AddOns\\HolidayHerald\\Media\\teatime",
     tradingPost = "Interface\\Icons\\INV_Misc_Coin_17",
+    daily    = "Interface\\GossipFrame\\DailyQuestIcon",
+    reset    = "Interface\\Icons\\INV_Misc_PocketWatch_01",
 }
 
 local simulateOwned = false   -- preview "done" mode
@@ -266,6 +269,7 @@ local function HolidayCategoryID(data)
                 if title == data.achievementCategory then return categoryID end
             elseif parent == WORLD_EVENTS then
                 local lower = title:lower()
+                if data.categoryMatch and lower:find(data.categoryMatch, 1, true) then return categoryID end
                 if (lower == holidayName or holidayName:find(lower, 1, true))
                         and (not bestLength or #lower > bestLength) then
                     best, bestLength = categoryID, #lower
@@ -325,6 +329,23 @@ local function PetInfo(entry)
     return numCollected or 0, limit or 3
 end
 
+-- Drake manuscripts and ensembles have no "do I have this?" API, but their
+-- tooltip says "Already known" once learned, so read that. Returns nil until
+-- the item has loaded, so it gets checked again shortly.
+local function KnownFromTooltip(itemID)
+    if not (C_TooltipInfo and C_TooltipInfo.GetItemByID) then return nil end
+    if not C_Item.GetItemInfo(itemID) then
+        C_Item.RequestLoadItemDataByID(itemID)
+        return nil
+    end
+    local data = C_TooltipInfo.GetItemByID(itemID)
+    if not (data and data.lines) then return nil end
+    for _, line in ipairs(data.lines) do
+        if line.leftText == ITEM_SPELL_KNOWN then return true end
+    end
+    return false
+end
+
 local function IsOwned(entry)
     if simulateOwned and entry.item and entry.kind ~= "decor" and entry.kind ~= "reminder" then
         return true
@@ -333,6 +354,9 @@ local function IsOwned(entry)
     if entry.reminderOnly or not entry.item then return nil end
 
     local kind = entry.kind
+    if kind == "drake" or kind == "ensemble" then
+        return KnownFromTooltip(entry.item)
+    end
     if kind == "toy" then
         return PlayerHasToy(entry.item) and true or false
     elseif kind == "mount" then
@@ -352,7 +376,7 @@ local function IsOwned(entry)
     return nil
 end
 
-local CHECKABLE = { toy = true, mount = true, pet = true, transmog = true }
+local CHECKABLE = { toy = true, mount = true, pet = true, transmog = true, drake = true, ensemble = true }
 local pendingData = false     -- set when something checkable hasn't loaded yet
 
 -- Returns: owned, total checkable, reminders (can never be checked)
@@ -428,7 +452,7 @@ local function PrepareData()
         if data.boss then
             data.boss.drops = Normalize(data.boss.drops, "transmog")
             for _, drop in ipairs(data.boss.drops) do
-                if drop.kind == "drake" or drop.kind == "ensemble" then drop.reminderOnly = true end
+                if (drop.kind == "drake" or drop.kind == "ensemble") and not C_TooltipInfo then drop.reminderOnly = true end
             end
         end
     end
@@ -600,8 +624,25 @@ local function TextTooltip(title, colors, body)
     end
 end
 
+-- When an item's name hasn't loaded yet, ask the game for it and redraw the
+-- tooltip a moment later (a few tries at most), so "Item 226453" turns into its name
+local function RetryTooltipSoon(tt, tries)
+    local owner = tt:GetOwner()
+    if not owner or tries >= 3 then return end
+    C_Timer.After(0.4, function()
+        if tt:IsOwned(owner) and owner:GetScript("OnEnter") then
+            owner.nameRetries = tries + 1
+            owner:GetScript("OnEnter")(owner)
+            owner.nameRetries = nil
+        end
+    end)
+end
+
 local function ListTooltip(title, list, colors, notes)
     return function(tt)
+        local owner = tt:GetOwner()
+        local tries = (owner and owner.nameRetries) or 0
+        local missingNames = false
         tt:AddLine(title, Hex(colors.main))
         -- Long lists (like a holiday's whole achievement list) only show what's left
         local hideCollected = #list > 15
@@ -612,6 +653,10 @@ local function ListTooltip(title, list, colors, notes)
             hidden = hidden + 1
           elseif ForMyFaction(entry) then
             local name = ItemName(entry)
+            if not entry.name and entry.item and not C_Item.GetItemNameByID(entry.item) then
+                C_Item.RequestLoadItemDataByID(entry.item)
+                missingNames = true
+            end
             if entry.kind == "pet" and entry.item and not simulateOwned then
                 local owned, limit = PetInfo(entry)
                 if owned then name = ("%s (%d/%d)"):format(name, owned, limit) end
@@ -637,6 +682,7 @@ local function ListTooltip(title, list, colors, notes)
         if hidden > 0 then
             tt:AddLine("+ " .. hidden .. " already done", 0.55, 0.52, 0.47)
         end
+        if missingNames then RetryTooltipSoon(tt, tries) end
         for _, note in ipairs(notes or {}) do
             tt:AddLine(" ")
             tt:AddLine(note, 0.72, 0.68, 0.61, true)
@@ -844,6 +890,14 @@ local function BuildLines(item)
                 .. "Each alt can still try once a day at a much lower chance.",
         }
         if boss.hardMode then notes[#notes + 1] = "Hard mode: " .. boss.hardMode end
+        -- A little cheer for any mount still missing
+        local wanted = {}
+        for _, drop in ipairs(boss.drops) do
+            if drop.kind == "mount" and IsOwned(drop) == false then wanted[#wanted + 1] = ItemName(drop) end
+        end
+        if #wanted > 0 then
+            notes[#notes + 1] = Color(colors.accent, "Good luck on " .. table.concat(wanted, " and ") .. "!")
+        end
         notes[#notes + 1] = "Click to open the Dungeon Finder."
 
         toGet[#toGet + 1] = {
@@ -853,6 +907,64 @@ local function BuildLines(item)
             tooltip = ListTooltip(boss.name .. " drops", boss.drops, colors, notes),
             onClick = OpenDungeonFinder,
         }
+    end
+
+    -- Daily quests: a checklist that resets each day.
+    -- An entry can list several quest IDs (quests = {...}) when any one of them counts.
+    local function DailyDone(quest)
+        for _, id in ipairs(quest.quests or { quest.quest }) do
+            if C_QuestLog.IsQuestFlaggedCompleted(id) then return true end
+        end
+        return false
+    end
+    local dailies = {}
+    for _, quest in ipairs(data.dailies or {}) do
+        if ForMyFaction(quest) then dailies[#dailies + 1] = quest end
+    end
+    if #dailies > 0 then
+        local active = (item.daysAway == 0 and item.started ~= false)
+        local doneCount = 0
+        for _, quest in ipairs(dailies) do
+            if active and DailyDone(quest) then doneCount = doneCount + 1 end
+        end
+        local allDone = active and doneCount == #dailies
+        local spec = {
+            icon = ICONS.daily,
+            text = "Daily quests" .. (active and "" or ("\n" .. Color(GRAY, "Open when the holiday starts"))),
+            right = Color(allDone and GRAY or colors.main, active and (doneCount .. " of " .. #dailies) or (#dailies .. " quests")),
+            tooltip = function(tt)
+                tt:AddLine(name .. ": daily quests", Hex(colors.main))
+                local lastGroup
+                for _, quest in ipairs(dailies) do
+                    if quest.group and quest.group ~= lastGroup then
+                        tt:AddLine(" ")
+                        tt:AddLine(quest.group, Hex(colors.accent))
+                        lastGroup = quest.group
+                    end
+                    local doneToday = active and DailyDone(quest)
+                    if doneToday then
+                        tt:AddDoubleLine(quest.name, "done today", 0.55, 0.52, 0.47, 0.55, 0.52, 0.47)
+                    else
+                        tt:AddDoubleLine(quest.name, quest.giver or "", 1, 1, 1, 0.72, 0.68, 0.61)
+                        if quest.where then tt:AddLine("   " .. quest.where, 0.72, 0.68, 0.61, true) end
+                    end
+                end
+                if data.dailyNote then
+                    tt:AddLine(" ")
+                    tt:AddLine(data.dailyNote, 0.72, 0.68, 0.61, true)
+                end
+                tt:AddLine(" ")
+                tt:AddLine("Resets with the daily reset.", 0.55, 0.52, 0.47, true)
+            end,
+            doneLabel = "Today's dailies",
+        }
+        hasGoals = true
+        if allDone then
+            done[#done + 1] = spec.doneLabel
+            doneTooltips[#doneTooltips + 1] = spec
+        else
+            toGet[#toGet + 1] = spec
+        end
     end
 
     -- Collection counts: unfinished ones listed, finished ones folded into "Done"
@@ -882,6 +994,16 @@ local function BuildLines(item)
             text = Color("C9C1B1", data.tip.short),
             tooltip = data.tip.hover and TextTooltip(name .. " tip", colors, data.tip.hover),
         }
+    end
+    -- More tips (can be faction-specific)
+    for _, extra in ipairs(HolidayHeraldDB.showTips and data.moreTips or {}) do
+        if ForMyFaction(extra) then
+            howTo[#howTo + 1] = {
+                icon = ICONS.tip,
+                text = Color("C9C1B1", extra.short),
+                tooltip = extra.hover and TextTooltip(extra.title or (name .. " tip"), colors, extra.hover),
+            }
+        end
     end
 
     -- Shopping lines. A holiday can have one list (shopping + shoppingFor) or several
@@ -1386,6 +1508,28 @@ local function Render(items)
     if #micro > 0 then
         y = PlaceHeader("Micro-holidays", y, hint)
         y = PlaceCards(micro, y, columns, columnWidth)
+    end
+
+    -- When the daily reset happens, asked of the game so it's right in every region
+    if HolidayHeraldDB.showReset and (#holidays > 0 or #micro > 0) and C_DateAndTime.GetSecondsUntilDailyReset then
+        local seconds = C_DateAndTime.GetSecondsUntilDailyReset()
+        local realmNow = ToEpoch(C_DateAndTime.GetCurrentCalendarTime())
+        if seconds and realmNow then
+            -- Round to the nearest 5 minutes; the game's countdown drifts by a minute or two
+            local r = date("*t", math.floor((realmNow + seconds) / 300 + 0.5) * 300)
+            local when = FormatEnd({ year = r.year, month = r.month, monthDay = r.day, hour = r.hour, minute = r.min })
+            local hours, minutes = math.floor(seconds / 3600), math.floor((seconds % 3600) / 60)
+            y = y - PlaceLine(popup, {
+                icon = ICONS.reset,
+                text = Color(SOFT, "Daily reset: " .. when),
+                tooltip = function(tt)
+                    tt:AddLine("Daily reset", Hex(DEFAULT_COLORS.main))
+                    tt:AddLine(("In %dh %02dm."):format(hours, minutes), 1, 1, 1)
+                    tt:AddLine("Daily quests and the holiday boss's daily loot come back at this time every day.", 0.72, 0.68, 0.61, true)
+                    tt:AddLine("Change how times are shown under Start and end times in the settings.", 0.55, 0.52, 0.47, true)
+                end,
+            }, 20, y, width - 8) - 2
+        end
     end
 
     local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost
@@ -1971,6 +2115,7 @@ local function BuildSettings()
     Checkbox("showTradingPost", "Trading Post reminder",
         "Show the Trading Post and your Trader's Tender under Weekly Events. Click it to open the Traveler's Log.")
     Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly Events.")
+    Checkbox("showReset", "Daily reset time", "Show when daily quests reset, under the holiday cards.")
 
     Header("What the cards show")
     Checkbox("showMeta", "Meta achievement line", "Link to the holiday's part of the Violet Proto-Drake meta.")
