@@ -4,7 +4,7 @@
 
 **Never miss a holiday again!** Holiday Herald reads the in-game calendar and tells you what's happening now and in the next week: what you can still collect, where to go, and a few secrets most players never find.
 
-Built after missing Pirates' Day (and the Jolly Roger toy) five days after hitting exalted. Never again!
+Built after missing Pirates' Day (and the Jolly Roger toy) five days after getting "Avast Ye, Admiral!" *sigh*. Never again!
 
 ## Features
 
