@@ -118,6 +118,23 @@ HH.Holidays.WinterVeil = {
         },
     },
 
+    -- Daily quests (IDs from Wowhead's guide; VERIFY in-game). The Greench quests have
+    -- separate Alliance and Horde IDs, so either one counts.
+    dailies = {
+        { quests = { 7043, 6983 }, group = "The Abominable Greench", name = "You're a Mean One...",
+          giver = "Wulmort Jinglepocket or Kaymard Copperpinch",
+          where = "From Ironforge or Orgrimmar (or the Strange Snowman in Hillsbrad). Defeat the Greench at Growless Cave in Hillsbrad Foothills and free Metzen." },
+        { quests = { 7045, 6984 }, group = "The Abominable Greench", name = "A Smokywood Pastures' Thank You!",
+          giver = "Greatfather Winter",
+          where = "Turn in the Stolen Treats for a Smokywood Pastures Special Gift." },
+
+        { quest = 39651, group = "Your garrison (Draenor)", name = "Grumpus", giver = "Pizzle or Almie", where = "Group quest. Worth 2 Merry Supplies." },
+        { quest = 39649, group = "Your garrison (Draenor)", name = "Menacing Grumplings", giver = "Pizzle or Almie" },
+        { quest = 39668, group = "Your garrison (Draenor)", name = "What Horrible Presents!", giver = "Pizzle or Almie" },
+        { quest = 39648, group = "Your garrison (Draenor)", name = "Where Are the Children?", giver = "Pizzle or Almie" },
+    },
+    dailyNote = "The garrison quests (level 100 and up) take you to Frostfire Ridge and give Merry Supplies, for toys like the Crashin' Thrashin' Killdozer and the Savage Gift, which has a tiny chance at the Minion of Grumpus mount.",
+
     tip = {
         short = "Presents appear under the tree on December 25. Open them on every character!",
         hover = {
