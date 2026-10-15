@@ -75,9 +75,9 @@ HH.Holidays.LunarFestival = {
     },
 
     reminders = {
-        { item = 211868, kind = "reminder", name = "Winding Slitherdrake: Lunar Festival Armor",
+        { item = 211868, kind = "drake", name = "Winding Slitherdrake: Lunar Festival Armor",
           cost = "Coins of Ancestry", where = "Valadar Starsong or any Lunar Festival Vendor" },
-        { item = 234059, kind = "reminder", name = "Ensemble: Ornate Violet Lunar Festival Attire",
+        { item = 234059, kind = "ensemble", name = "Ensemble: Ornate Violet Lunar Festival Attire",
           cost = "Coins of Ancestry", where = "Moonglade vendors" },
     },
 

@@ -37,7 +37,7 @@ HH.Holidays.PiratesDay = {
     },
 
     reminders = {
-        { item = 208858, kind = "reminder", name = "Highland Drake: Pirates' Day Armor",
+        { item = 208858, kind = "drake", name = "Highland Drake: Pirates' Day Armor",
           cost = "50,000 gold", where = "Dread Captain DeMeza, Booty Bay bank roof" },
     },
 

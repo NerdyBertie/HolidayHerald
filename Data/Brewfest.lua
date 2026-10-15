@@ -32,8 +32,7 @@ HH.Holidays.Brewfest = {
             { item = 248761, kind = "mount", name = "Brewfest Bomber" },
             { item = 37828,  kind = "mount", name = "Great Brewfest Kodo" },
             { item = 33977,  kind = "mount", name = "Swift Brewfest Ram" },
-            { item = 208742, kind = "drake", name = "Renewed Proto-Drake: Brewfest Armor",
-              reminderOnly = true },       -- can't confirm ownership yet
+            { item = 208742, kind = "drake", name = "Renewed Proto-Drake: Brewfest Armor" },
         },
     },
 

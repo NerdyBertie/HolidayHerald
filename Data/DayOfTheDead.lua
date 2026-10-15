@@ -25,7 +25,7 @@ HH.Holidays.DayOfTheDead = {
     },
 
     reminders = {
-        { item = 208859, kind = "reminder", name = "Cliffside Wylderdrake: Day of the Dead Armor",
+        { item = 208859, kind = "drake", name = "Cliffside Wylderdrake: Day of the Dead Armor",
           cost = "50,000 gold", where = "Chapman, by Catrina at capital city graveyards" },
     },
 

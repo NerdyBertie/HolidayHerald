@@ -51,6 +51,22 @@ HH.Holidays.PilgrimsBounty = {
         248716, 248717, 248718, 248719,         -- Bountiful Backpacks (green, orange, purple, white)
     },
 
+    -- Daily quests: turn in 20 of one dish each (cook it or buy it). IDs from Wowhead's guide; VERIFY in-game.
+    dailies = {
+        { quest = 14051, faction = "Alliance", group = "Outside Ironforge", name = "Don't Forget The Stuffing!", giver = "Caitrin Ironkettle", where = "20 Spice Bread Stuffing" },
+        { quest = 14048, faction = "Alliance", group = "Outside Ironforge", name = "Can't Get Enough Turkey", giver = "Caitrin Ironkettle", where = "20 Slow-Roasted Turkey" },
+        { quest = 14053, faction = "Alliance", group = "Stormwind gates", name = "We're Out of Cranberry Chutney Again?", giver = "Ellen Moore", where = "20 Cranberry Chutney" },
+        { quest = 14055, faction = "Alliance", group = "Stormwind gates", name = "She Says Potato", giver = "Jasper Moore", where = "20 Candied Sweet Potato" },
+        { quest = 14054, faction = "Alliance", group = "Outside Darnassus", name = "Easy As Pie", giver = "Mary Allerton", where = "20 Pumpkin Pie" },
+
+        { quest = 14062, faction = "Horde", group = "Outside Orgrimmar", name = "Don't Forget The Stuffing!", giver = "Ondani Greatmill", where = "20 Spice Bread Stuffing" },
+        { quest = 14061, faction = "Horde", group = "Outside Orgrimmar", name = "Can't Get Enough Turkey", giver = "Ondani Greatmill", where = "20 Slow-Roasted Turkey" },
+        { quest = 14059, faction = "Horde", group = "Undercity courtyard", name = "We're Out of Cranberry Chutney Again?", giver = "Roberta Carter", where = "20 Cranberry Chutney" },
+        { quest = 14058, faction = "Horde", group = "Undercity courtyard", name = "She Says Potato", giver = "William Mullins", where = "20 Candied Sweet Potato" },
+        { quest = 14060, faction = "Horde", group = "Outside Thunder Bluff", name = "Easy As Pie", giver = "Mahara Goldwheat", where = "20 Pumpkin Pie" },
+    },
+    dailyNote = "Cook the dishes yourself or buy them from the holiday vendors. Each daily gives a Pilgrim's Bounty bag, which can hold the Bush Chicken pet, the Turkey Shooter toy, the Fine Pilgrim's Hat, and the Bountiful Backpacks.",
+
     tip = {
         short = "The best time of year to level Classic Cooking! Grab the Bountiful Cookbook at a feast table.",
         hover = {

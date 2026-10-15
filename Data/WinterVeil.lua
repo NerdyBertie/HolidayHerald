@@ -96,7 +96,7 @@ HH.Holidays.WinterVeil = {
     },
 
     reminders = {
-        { item = 210432, kind = "reminder", name = "Highland Drake: Winter Veil Armor", cost = "Stolen Present" },
+        { item = 210432, kind = "drake", name = "Highland Drake: Winter Veil Armor", cost = "Stolen Present" },
     },
 
     -- Two shopping lines: the treats themselves, and what you need to bake the cookies

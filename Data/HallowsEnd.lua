@@ -21,6 +21,59 @@ HH.Holidays.HallowsEnd = {
         strangeTrip = 2144,                                 -- What a Long, Strange Trip It's Been (verified in-game)
     },
 
+    -- Daily quests (IDs from Wowhead and the WoW wiki; VERIFY in-game)
+    dailies = {
+        { quest = 29054, faction = "Alliance", group = "Stormwind", name = "Stink Bombs Away!", giver = "Gretchen Fenlow" },
+        { quest = 29144, faction = "Alliance", group = "Stormwind", name = "Clean Up in Stormwind", giver = "Gretchen Fenlow" },
+        { quest = 29075, faction = "Alliance", group = "Stormwind", name = "A Time to Gain", giver = "Celestine of the Harvest", where = "At the Wickerman bonfire." },
+        { quest = 29371, faction = "Alliance", group = "Stormwind", name = "A Time to Lose", giver = "Keira", where = "Douse the Horde's Wickerman." },
+        { quest = 29374, faction = "Horde", group = "Undercity", name = "Stink Bombs Away!", giver = "Candace Fenlow" },
+        { quest = 29375, faction = "Horde", group = "Undercity", name = "Clean Up in Undercity", giver = "Candace Fenlow" },
+        { quest = 29376, faction = "Horde", group = "Undercity", name = "A Time to Build Up", giver = "Darkcaller Yanka", where = "At the Wickerman bonfire." },
+        { quest = 29377, faction = "Horde", group = "Undercity", name = "A Time to Break Down", giver = "Darkcaller Yanka", where = "Douse the Alliance's Wickerman." },
+
+        -- "Let the Fires Come!" starts the attack; "Stop the Fires!" is taken mid-attack. Either one counts.
+        { quests = { 12135, 11131 }, faction = "Alliance", group = "Village fires", name = "Let the Fires Come!",
+          giver = "Costumed Orphan Matron", where = "Goldshire, Kharanos, or Azure Watch. Any one town, once a day." },
+        { quests = { 12139, 11219 }, faction = "Horde", group = "Village fires", name = "Let the Fires Come!",
+          giver = "Masked Orphan Matron", where = "Razor Hill, Brill, or Eversong Woods. Any one town, once a day." },
+
+        { quest = 43162, group = "Val'sharah (Legion)", name = "Under the Crooked Tree", giver = "Bradensbrook",
+          where = "Defeat the Hag of the Crooked Tree. Tricky Treats, and a small chance at one of four sisters' hats." },
+
+        { quest = 39716, group = "Your garrison (Draenor)", name = "Smashing Squashlings", giver = "Orukan" },
+        { quest = 39720, group = "Your garrison (Draenor)", name = "Foul Fertilizer", giver = "Orukan" },
+        { quest = 39721, group = "Your garrison (Draenor)", name = "Culling the Crew", giver = "Orukan" },
+        { quest = 39719, group = "Your garrison (Draenor)", name = "Mutiny on the Boneship", giver = "Orukan", where = "Group quest. Worth 2 Spooky Supplies." },
+    },
+    dailyNote = "The city quests give about 17 Tricky Treats a day at max level. Garrison quests give Spooky Supplies: spend 5 at Izzy Hollyfizzle for each of the five Hallow's End decorations, and trade extras for Tricky Treats.",
+
+    -- Shade of the Horseman fires (the quest itself is in dailies above)
+    moreTips = {
+        { faction = "Alliance", short = "Save Goldshire, Kharanos, or Azure Watch from the Shade of the Horseman's fires once a day.",
+          title = "Let the Fires Come!",
+          hover = {
+              "#How it works",
+              "Take Let the Fires Come! from the Costumed Orphan Matron. Accepting it starts the attack, so there's no timer to wait for.",
+              "Grab a bucket from the Water Barrel next to her. Use it to make a target circle, then click the circle to throw.",
+              "Put out every fire and the Shade of the Horseman lands. Defeat him and loot the Large Jack-o'-Lantern (once a day) for a Crudely Wrapped Gift.",
+              " ",
+              "#Missed it?",
+              "If the fires win, the quest stays in your log. Turn it in the next time a town is saved, at any of your faction's Matrons.",
+          } },
+        { faction = "Horde", short = "Save Razor Hill, Brill, or Eversong Woods from the Shade of the Horseman's fires once a day.",
+          title = "Let the Fires Come!",
+          hover = {
+              "#How it works",
+              "Take Let the Fires Come! from the Masked Orphan Matron. Accepting it starts the attack, so there's no timer to wait for.",
+              "Grab a bucket from the Water Barrel next to her. Use it to make a target circle, then click the circle to throw.",
+              "Put out every fire and the Shade of the Horseman lands. Defeat him and loot the Large Jack-o'-Lantern (once a day) for a Crudely Wrapped Gift.",
+              " ",
+              "#Missed it?",
+              "If the fires win, the quest stays in your log. Turn it in the next time a town is saved, at any of your faction's Matrons.",
+          } },
+    },
+
     -- Holiday boss: Headless Horseman, Loot-Filled Pumpkin (item 209024)
     boss = {
         name = "Headless Horseman",
@@ -30,8 +83,7 @@ HH.Holidays.HallowsEnd = {
             { item = 247721, kind = "mount", name = "The Headless Horseman's Ghoulish Charger" },
             { item = 211271, kind = "pet",   name = "Arfus" },
             { item = 33154,  kind = "pet",   name = "Sinister Squashling" },
-            { item = 208680, kind = "drake", name = "Windborne Velocidrake: Hallow's End Armor",
-              reminderOnly = true },
+            { item = 208680, kind = "drake", name = "Windborne Velocidrake: Hallow's End Armor" },
             { item = 117355, kind = "transmog", name = "The Horseman's Horrific Hood" },
             { item = 117356, kind = "transmog", name = "The Horseman's Sinister Slicer" },
             { item = 33292,  kind = "transmog", name = "Hallowed Helm" },
@@ -79,16 +131,22 @@ HH.Holidays.HallowsEnd = {
 
     -- Vendor transmog (count line only)
     transmog = {
-        226453, 226427,         -- Patched Harvest Golem's Post, Patched Harvester's Claw
+        { item = 226453, name = "Patched Harvest Golem's Post" },
+        { item = 226427, name = "Patched Harvester's Claw" },
         226461, 226458, 226457, 226456, 226690, 226455, 226454, -- Patched Harvest Golem set pieces
-        230042,                 -- Prowler's Faded Shoulder Cape
-        208735,                 -- Bucket of Morbid Treats
-        247710, 247706, 247715, -- The Horseman's Ghoulish Great Blade, Blade, Bulwark
+        { item = 230042, name = "Prowler's Faded Shoulder Cape" },
+        { item = 208735, name = "Bucket of Morbid Treats" },
+        { item = 247710, name = "The Horseman's Ghoulish Great Blade" },
+        { item = 247706, name = "The Horseman's Ghoulish Blade" },
+        { item = 247715, name = "The Horseman's Ghoulish Bulwark" },
     },
 
-    -- Ensembles can't be checked yet, so they're listed as plain reminders
+    -- Ensembles are checked from their tooltip ("Already known")
     reminders = {
-        { item = 230173, kind = "reminder", name = "Ensemble: Prowler's Faded Headgear" },
+        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", cost = "150 Tricky Treats",
+          faction = "Alliance", note = "From Dorothy or Pippi, the Hallow's End vanity vendors." },
+        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", cost = "150 Tricky Treats",
+          faction = "Horde", note = "From Chub or Woim, the Hallow's End vanity vendors." },
     },
 
     tip = {
