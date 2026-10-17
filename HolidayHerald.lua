@@ -313,9 +313,17 @@ local function ItemLink(id, name)
     return link or ("|cffffffff|Hitem:%d::::::::::::::|h[%s]|h|r"):format(id, name or ("Item " .. id))
 end
 
-local function OpenDungeonFinder()
+-- Opens the Dungeon Finder. If a holiday dungeon ID is given and it's open,
+-- picks it in the dropdown too, so all that's left is clicking Find Group.
+-- (Addons can't queue you, but they can choose what's selected.)
+local function OpenDungeonFinder(dungeonID)
     if PVEFrame_ShowFrame then
         pcall(PVEFrame_ShowFrame, "GroupFinderFrame", LFDParentFrame)
+    end
+    if type(dungeonID) == "number" and LFDQueueFrame_SetType then
+        C_Timer.After(0, function()
+            pcall(LFDQueueFrame_SetType, dungeonID)
+        end)
     end
 end
 
@@ -899,14 +907,15 @@ local function BuildLines(item)
         if #wanted > 0 then
             notes[#notes + 1] = Color(colors.accent, "Good luck on " .. table.concat(wanted, " and ") .. "!")
         end
-        notes[#notes + 1] = "Click to open the Dungeon Finder."
+        notes[#notes + 1] = active and "Click to open the Dungeon Finder with the " .. boss.name .. " already picked. Just hit Find Group!"
+            or "Click to open the Dungeon Finder."
 
         toGet[#toGet + 1] = {
             icon = ICONS.boss,
             text = boss.name .. (status or ""),
             right = Color(bossDone and GRAY or colors.main, owned .. " of " .. total),
             tooltip = ListTooltip(boss.name .. " drops", boss.drops, colors, notes),
-            onClick = OpenDungeonFinder,
+            onClick = function() OpenDungeonFinder(active and boss.lfg or nil) end,
         }
     end
 
@@ -2002,6 +2011,7 @@ end
 -- same Media/workshop.tga image, so the page looks the same whoever builds it.
 local WORKSHOP_ADDONS = {
     { name = "HandyNotes: Dive Bar Front Crawl", folder = "HandyNotes_DiveBarCrawl" },
+    { name = "HandyNotes: Seeking the Soulstones", folder = "HandyNotes_SeekingTheSoulstones" },
     { name = "ItemWatch",                        folder = "ItemWatch" },
     { name = "Boomkin Buff Watcher",             folder = "BoomkinBuffWatcher" },
     { name = "Holiday Herald",                   folder = "HolidayHerald" },

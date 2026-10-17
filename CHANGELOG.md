@@ -1,5 +1,11 @@
 # Holiday Herald
 
+## v1.6.7
+
+### Improvements
+- HandyNotes: Seeking the Soulstones is now listed in NerdyBertie's Addon Workshop.
+- Clicking the holiday boss line now opens the Dungeon Finder with the holiday dungeon already picked, so all that's left is clicking Find Group.
+
 ## v1.6.6
 
 ### New
