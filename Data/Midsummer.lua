@@ -14,6 +14,7 @@ HH.Holidays.Midsummer = {
         card   = "161B28",
         border = "4A78C9",
         titleGradient = { "E8392A", "F5872F", "FFC94A" },   -- fire red -> orange -> gold
+        sections = { toGet = "FFC94A", howTo = "F5872F", secrets = "F0583F" },   -- gold, orange, fire red
     },
 
     tip = {

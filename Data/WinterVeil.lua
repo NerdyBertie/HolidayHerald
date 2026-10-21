@@ -14,6 +14,7 @@ HH.Holidays.WinterVeil = {
         card   = "1C1A18",
         border = "3E9E6A",
         titleGradient = { "E23B3B", "F3E9E4", "3E9E6A" },   -- cranberry -> snow -> evergreen
+        sections = { toGet = "4FBF80", howTo = "E8C15A", secrets = "F05A5A" },   -- evergreen, tinsel gold, cranberry
     },
 
     meta = {
@@ -96,7 +97,7 @@ HH.Holidays.WinterVeil = {
     },
 
     reminders = {
-        { item = 210432, kind = "drake", name = "Highland Drake: Winter Veil Armor", cost = "Stolen Present" },
+        { item = 210432, kind = "drake", unlockQuest = 78371, name = "Highland Drake: Winter Veil Armor", cost = "Stolen Present" },
     },
 
     -- Two shopping lines: the treats themselves, and what you need to bake the cookies

@@ -14,6 +14,7 @@ HH.Holidays.ChildrensWeek = {
         card   = "15202A",
         border = "F7D35C",
         titleGradient = { "6EC1F0", "F7D35C" },   -- sky -> sunshine
+        sections = { toGet = "6EC1F0", howTo = "F7D35C", secrets = "F28C8C" },   -- sky, sunshine, coral
     },
 
     tip = {

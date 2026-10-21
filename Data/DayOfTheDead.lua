@@ -15,6 +15,7 @@ HH.Holidays.DayOfTheDead = {
         card   = "241621",
         border = "D9468F",
         titleGradient = { "F2A33A", "D9468F" },             -- marigold -> magenta
+        sections = { toGet = "F2A33A", howTo = "E05AA0", secrets = "4FC3C9" },   -- marigold, magenta, teal
     },
 
     achievements = {
@@ -25,7 +26,7 @@ HH.Holidays.DayOfTheDead = {
     },
 
     reminders = {
-        { item = 208859, kind = "drake", name = "Cliffside Wylderdrake: Day of the Dead Armor",
+        { item = 208859, kind = "drake", unlockQuest = 77876, name = "Cliffside Wylderdrake: Day of the Dead Armor",
           cost = "50,000 gold", where = "Chapman, by Catrina at capital city graveyards" },
     },
 

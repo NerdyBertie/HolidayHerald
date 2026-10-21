@@ -14,13 +14,17 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Server time or your time.** Choose how start, end, and reset times are shown: server time (like the in-game calendar), your own time, or both side by side.
 - **Themed holiday cards.** Each holiday gets its own colors, title style, and icon, even in chat messages.
 - **Collection tracking.** Mounts, toys, pets, transmog, drake armor manuscripts, ensembles, and achievements are checked against your collection. Collected items gray out, so you only see what you're missing.
+- **Housing decor shopping list.** Every piece of a holiday's decor in one hover, grouped by what it costs, with where to buy it. Pieces you already have turn gray.
+- **Holiday currency totals.** See how many Tricky Treats (and more to come) you'd need for one of everything you're still missing, next to how many you have.
+- **Event timers.** Hourly events, like Hallow's End's Community Candy Crawl in your neighborhood, show whether they're on now or how long until the next one.
 - **Always-current achievements.** Each holiday's achievement list is read straight from the game, so brand new achievements show up on their own. Hover to see only what you still need.
-- **Holiday boss info.** See every drop at a glance, plus whether your account's best daily roll is still available and whether this character has done the boss today. Click the boss line to bring up the LFG window (you still have to click the drop down and select the holiday dungeon!) And if you're still missing the boss's mount, you get a little "good luck!" too.
+- **Holiday boss info.** See every drop at a glance, plus whether your account's best daily roll is still available and whether this character has done the boss today. Click the boss line to open the Dungeon Finder with the holiday dungeon already picked. Just hit Find Group! And if you're still missing the boss's mount, you get a little "good luck!" too.
 - **Clickable achievements.** Click any achievement line to open it, or shift-click to link it in chat. Meta lines jump straight to the holiday's part of _What a Long, Strange Trip It's Been_ (Violet Proto-Drake).
 - **Smart shopping lists.** Holidays that need you to bring something list it for you, like Winter Veil's cookies and the ingredients to bake them. Profession quests only show what your professions need.
 - **Exact times.** See exactly when each holiday starts and ends, down to the minute.
 - **Tips for new and returning players.** Hover for where to go, what to do, and which expansion a zone belongs to. Got TomTom? Use its /way command with any coordinates for an arrow.
 - **Secrets!** Spoiler teasers that only reveal when you hover. Hidden pets, sneaky toys, and more.
+- **Fold-up sections.** Already read the tips and secrets? Click the heading to fold them away. Each holiday's sections get their own colors from its theme.
 - **Class goodies.** Lines like "Hunters: tame the Pink Elekk!" are shown to everyone, so you won't miss something for your alts.
 - **Short-holiday alerts.** One-day holidays get a loud on-screen alert, so they can't slip by.
 - **Stays quiet.** A full popup when a holiday first shows up and again on the day it starts, then just a chat line after that. Click the chat link, or type `/herald` at any time to see the popup.

@@ -14,6 +14,7 @@ HH.Holidays.Noblegarden = {
         card   = "1A2120",
         border = "F3E08A",
         titleGradient = { "8FD19E", "F3E08A", "F5B5D0", "B9A3E3" },   -- pastel egg colors
+        sections = { toGet = "8FD19E", howTo = "F3E08A", secrets = "F5B5D0" },   -- pastel green, yellow, pink
     },
 
     tip = {

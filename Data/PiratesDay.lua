@@ -16,6 +16,7 @@ HH.Holidays.PiratesDay = {
         card   = "10201F",
         border = "3FA7A0",
         titleGradient = { "3FA7A0", "E8C15A" },             -- sea teal -> doubloon gold
+        sections = { toGet = "4FC4BC", howTo = "E8C15A", secrets = "F28C8C" },   -- sea teal, doubloon gold, coral
     },
 
     achievements = {
@@ -37,7 +38,7 @@ HH.Holidays.PiratesDay = {
     },
 
     reminders = {
-        { item = 208858, kind = "drake", name = "Highland Drake: Pirates' Day Armor",
+        { item = 208858, kind = "drake", unlockQuest = 77875, name = "Highland Drake: Pirates' Day Armor",
           cost = "50,000 gold", where = "Dread Captain DeMeza, Booty Bay bank roof" },
     },
 

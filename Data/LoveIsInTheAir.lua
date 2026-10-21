@@ -14,6 +14,7 @@ HH.Holidays.LoveIsInTheAir = {
         card   = "26161C",
         border = "F06C9B",
         titleGradient = { "F06C9B", "FFB3C8", "E0566A" },   -- rose -> blush -> red
+        sections = { toGet = "F06C9B", howTo = "FFB3C8", secrets = "E0566A" },   -- rose, blush, red
     },
 
     tip = {

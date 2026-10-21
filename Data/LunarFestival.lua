@@ -14,6 +14,7 @@ HH.Holidays.LunarFestival = {
         card   = "141A2A",
         border = "A9C8F0",
         titleGradient = { "A9C8F0", "EEF0FF", "C7B8F0" },   -- moon blue -> moonlight -> lavender
+        sections = { toGet = "A9C8F0", howTo = "EEF0FF", secrets = "C7B8F0" },   -- moon blue, moonlight, lavender
     },
 
     meta = {
@@ -75,7 +76,7 @@ HH.Holidays.LunarFestival = {
     },
 
     reminders = {
-        { item = 211868, kind = "drake", name = "Winding Slitherdrake: Lunar Festival Armor",
+        { item = 211868, kind = "drake", unlockQuest = 79112, name = "Winding Slitherdrake: Lunar Festival Armor",
           cost = "Coins of Ancestry", where = "Valadar Starsong or any Lunar Festival Vendor" },
         { item = 234059, kind = "ensemble", name = "Ensemble: Ornate Violet Lunar Festival Attire",
           cost = "Coins of Ancestry", where = "Moonglade vendors" },

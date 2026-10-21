@@ -16,6 +16,7 @@ HH.Holidays.Brewfest = {
         card   = "241E16",
         border = "B87333",              -- copper keg
         titleGradient = { "C47A1E", "E3A43C", "F6E7C1" },   -- dark ale -> amber -> foam
+        sections = { toGet = "E3A43C", howTo = "F6E7C1", secrets = "D98A3A" },   -- amber, foam, dark ale
     },
 
     -- Meta line: holiday meta + the Violet Proto-Drake meta
@@ -32,7 +33,7 @@ HH.Holidays.Brewfest = {
             { item = 248761, kind = "mount", name = "Brewfest Bomber" },
             { item = 37828,  kind = "mount", name = "Great Brewfest Kodo" },
             { item = 33977,  kind = "mount", name = "Swift Brewfest Ram" },
-            { item = 208742, kind = "drake", name = "Renewed Proto-Drake: Brewfest Armor" },
+            { item = 208742, kind = "drake", unlockQuest = 77774, name = "Renewed Proto-Drake: Brewfest Armor" },
         },
     },
 

@@ -14,6 +14,7 @@ HH.Holidays.HallowsEnd = {
         card   = "1F1626",
         border = "7CD13E",              -- fel green
         titleGradient = { "7CD13E", "F07F2E", "9B6BD6" },   -- fel -> pumpkin -> purple
+        sections = { toGet = "7CD13E", howTo = "F07F2E", secrets = "B48CF0" },   -- fel, pumpkin, purple (lifted a bit to read on the dark card)
     },
 
     meta = {
@@ -38,6 +39,29 @@ HH.Holidays.HallowsEnd = {
         { quests = { 12139, 11219 }, faction = "Horde", group = "Village fires", name = "Let the Fires Come!",
           giver = "Masked Orphan Matron", where = "Razor Hill, Brill, or Eversong Woods. Any one town, once a day." },
 
+        -- Neighborhood (player housing) dailies, new in Midnight. IDs from the quest log (verified Oct 2026).
+        { quest = 93400, group = "Your neighborhood", name = "Sugar Run", giver = "Yin Shuilan",
+          where = "Take the portal to Nomi in the day's zone (like Duskwood), then take the portal back." },
+        -- Nomi's candies: three per theme (Duskwood, Felwood, Drustvar). Pick one a day; any counts.
+        -- IDs from Wowhead (Oct 2026).
+        { quests = { 95822, 93401, 95825,     -- Duskwood
+                     95827, 95828, 95829,     -- Felwood
+                     92536, 92537, 92535 },   -- Drustvar
+          group = "Your neighborhood", name = "Candy Crafting", giver = "Nomi",
+          where = "Through the Sugar Run portal. Nomi offers three candies; pick one and bring it to the Wickerman piñata in your neighborhood. "
+               .. "Duskwood: Blighted Core Caramels, Howling Honey Drops, Twisted Vine Licorice. "
+               .. "Felwood: Blighted Bloom Bites, Felroot Crunch, Rotleaf Wafers. "
+               .. "Drustvar: Bewitched Berry Bites, Hexed Honeycombs, Witchbane Truffles. "
+               .. "All three from one theme earns that theme's achievement; all three themes earns Sweet Tooth." },
+        { quest = 92104, faction = "Alliance", group = "Your neighborhood", name = "Broomstick Express", giver = "Alaric Duskwick",
+          where = "Founder's Point (54.0, 33.8). Switch to steady flight first (the broom won't fly with skyriding), then deliver candy to the NPCs marked on your map." },
+        { quest = 92104, faction = "Horde", group = "Your neighborhood", name = "Broomstick Express", giver = "Nargok Ghostcleaver",
+          where = "Razorwind Shores (51.6, 54.2). Switch to steady flight first (the broom won't fly with skyriding), then deliver candy to the NPCs marked on your map." },
+        { quest = 92455, faction = "Alliance", group = "Your neighborhood", name = "Specter Inspector", giver = "Alaric Duskwick",
+          where = "Use the Ghost Gear, step into a ghost's or witch's circle, press the extra action button, and chase the ghost. Catch and deposit 5." },
+        { quest = 92455, faction = "Horde", group = "Your neighborhood", name = "Specter Inspector", giver = "Nargok Ghostcleaver",
+          where = "Use the Ghost Gear, step into a ghost's or witch's circle, press the extra action button, and chase the ghost. Catch and deposit 5." },
+
         { quest = 43162, group = "Val'sharah (Legion)", name = "Under the Crooked Tree", giver = "Bradensbrook",
           where = "Defeat the Hag of the Crooked Tree. Tricky Treats, and a small chance at one of four sisters' hats." },
 
@@ -46,10 +70,33 @@ HH.Holidays.HallowsEnd = {
         { quest = 39721, group = "Your garrison (Draenor)", name = "Culling the Crew", giver = "Orukan" },
         { quest = 39719, group = "Your garrison (Draenor)", name = "Mutiny on the Boneship", giver = "Orukan", where = "Group quest. Worth 2 Spooky Supplies." },
     },
-    dailyNote = "The city quests give about 17 Tricky Treats a day at max level. Garrison quests give Spooky Supplies: spend 5 at Izzy Hollyfizzle for each of the five Hallow's End decorations, and trade extras for Tricky Treats.",
+    -- Timed events (startMinute = minutes past the hour it begins; seen Oct 21: :00 to :15)
+    timedEvents = {
+        { quest = 98801, name = "Community Candy Crawl", startMinute = 0, length = 15,
+          where = "A neighborhood world quest in Founder's Point and Razorwind Shores. Loot the candy buckets outside occupied plots. "
+               .. "10 Neighborhood Candy gets you experience, 2 Tricky Treats, and 3 more Neighborhood Candy." },
+    },
+
+    -- Holiday currency: entries with price = N add up into "Tricky Treats for the rest"
+    currency = { item = 33226, name = "Tricky Treats",
+        note = "Counts one of each thing you don't have yet. Prices from Chub and Woim (Oct 2026)." },
+
+    dailyNote = "Catch 10 ghosts at least once for I Ain't Afraid of no Ghost. The neighborhood quests also give the day's candy (like Duskwood Caramels). The city quests give about 17 Tricky Treats a day at max level. Garrison quests give Spooky Supplies: spend 5 at Izzy Hollyfizzle for each of the five Hallow's End decorations, and trade extras for Tricky Treats.",
 
     -- Shade of the Horseman fires (the quest itself is in dailies above)
     moreTips = {
+        { short = "Start at the Holiday Enthusiast in Silvermoon (51.2, 76.4), near the Trading Post.",
+          title = "Holiday Enthusiast",
+          hover = {
+              "#Start here",
+              "Among the pumpkins near the Trading Post in Silvermoon (51.2, 76.4). He has three lead-in quests:",
+              " ",
+              { "A Season for Celebration", "the Wickerman quests" },
+              { "Costumed Orphan Matron", "the village fires" },
+              { "A Haunted Home", "your neighborhood" },
+              " ",
+              "A Haunted Home sends you to Yin Shuilan in your neighborhood for the new neighborhood dailies.",
+          } },
         { faction = "Alliance", short = "Save Goldshire, Kharanos, or Azure Watch from the Shade of the Horseman's fires once a day.",
           title = "Let the Fires Come!",
           hover = {
@@ -83,10 +130,10 @@ HH.Holidays.HallowsEnd = {
             { item = 247721, kind = "mount", name = "The Headless Horseman's Ghoulish Charger" },
             { item = 211271, kind = "pet",   name = "Arfus" },
             { item = 33154,  kind = "pet",   name = "Sinister Squashling" },
-            { item = 208680, kind = "drake", name = "Windborne Velocidrake: Hallow's End Armor" },
+            { item = 208680, kind = "drake", unlockQuest = 77725, name = "Windborne Velocidrake: Hallow's End Armor" },
             { item = 117355, kind = "transmog", name = "The Horseman's Horrific Hood" },
             { item = 117356, kind = "transmog", name = "The Horseman's Sinister Slicer" },
-            { item = 33292,  kind = "transmog", name = "Hallowed Helm" },
+            { item = 33292,  kind = "transmog", name = "Hallowed Helm", price = 100, cost = "or 100 Tricky Treats" },
             -- The Horseman's Ghoulish Collection: one guaranteed piece per day until you have all nine
             { item = 247964, kind = "transmog", name = "The Horseman's Ghoulish Helm" },
             { item = 247965, kind = "transmog", name = "The Horseman's Ghoulish Mantle" },
@@ -108,19 +155,19 @@ HH.Holidays.HallowsEnd = {
 
     -- Vendor toys (Tricky Treats, from Chub and Dorothy)
     toys = {
-        { item = 163045, name = "Headless Horseman's Hearthstone", cost = "150 treats" },
-        { item = 151271, name = "Horse Head Costume",              cost = "150 treats" },
-        { item = 151270, name = "Horse Tail Costume",              cost = "150 treats" },
-        { item = 70722,  name = "Little Wickerman",                cost = "150 treats" },
+        { item = 163045, name = "Headless Horseman's Hearthstone", price = 150, cost = "150 treats" },
+        { item = 151271, name = "Horse Head Costume",              price = 150, cost = "150 treats" },
+        { item = 151270, name = "Horse Tail Costume",              price = 150, cost = "150 treats" },
+        { item = 70722,  name = "Little Wickerman",                price = 100, cost = "100 treats" },
     },
 
     -- Vendor battle pets (Tricky Treats, from Woim and Pippi)
     pets = {
-        { item = 116801, name = "Cursed Birman",       cost = "150 treats" },
-        { item = 70908,  name = "Feline Familiar",     cost = "150 treats" },
-        { item = 33154,  name = "Sinister Squashling", cost = "150 treats (also drops from the boss)" },
-        { item = 116804, name = "Widget the Departed", cost = "150 treats" },
-        { item = 151269, name = "Naxxy",               cost = "150 treats" },
+        { item = 116801, name = "Cursed Birman",       price = 150, cost = "150 treats" },
+        { item = 70908,  name = "Feline Familiar",     price = 150, cost = "150 treats" },
+        { item = 33154,  name = "Sinister Squashling", price = 150, cost = "150 treats (also drops from the boss)" },
+        { item = 116804, name = "Widget the Departed", price = 150, cost = "150 treats" },
+        { item = 151269, name = "Naxxy",               price = 150, cost = "150 treats" },
         { item = 71076,  name = "Creepy Crate",        cost = "Missing Heirlooms quest chain" },
     },
 
@@ -131,21 +178,62 @@ HH.Holidays.HallowsEnd = {
 
     -- Vendor transmog (count line only)
     transmog = {
-        { item = 226453, name = "Patched Harvest Golem's Post" },
-        { item = 226427, name = "Patched Harvester's Claw" },
-        226461, 226458, 226457, 226456, 226690, 226455, 226454, -- Patched Harvest Golem set pieces
-        { item = 230042, name = "Prowler's Faded Shoulder Cape" },
-        { item = 208735, name = "Bucket of Morbid Treats" },
-        { item = 247710, name = "The Horseman's Ghoulish Great Blade" },
-        { item = 247706, name = "The Horseman's Ghoulish Blade" },
-        { item = 247715, name = "The Horseman's Ghoulish Bulwark" },
+        { item = 226453, name = "Patched Harvest Golem's Post", price = 100, cost = "100 Tricky Treats" },
+        { item = 226427, name = "Patched Harvester's Claw", price = 100, cost = "100 Tricky Treats" },
+        -- Patched Harvest Golem set pieces, 100 Tricky Treats each
+        { item = 226461, price = 100 }, { item = 226458, price = 100 }, { item = 226457, price = 100 },
+        { item = 226456, price = 100 }, { item = 226690, price = 100 }, { item = 226455, price = 100 },
+        { item = 226454, price = 100 },
+        { item = 230042, name = "Prowler's Faded Shoulder Cape", price = 50, cost = "50 Tricky Treats" },
+        { item = 208735, name = "Bucket of Morbid Treats", price = 150, cost = "150 Tricky Treats" },
+        { item = 247710, name = "The Horseman's Ghoulish Great Blade", price = 100, cost = "100 Tricky Treats" },
+        { item = 247706, name = "The Horseman's Ghoulish Blade", price = 100, cost = "100 Tricky Treats" },
+        { item = 247715, name = "The Horseman's Ghoulish Bulwark", price = 100, cost = "100 Tricky Treats" },
     },
+
+    -- Housing decor (new in Midnight). Decor ownership can't be checked yet,
+    -- so the card shows how many pieces there are and lists them on hover.
+    decor = {
+        -- Sold for gold
+        { item = 282081, group = "For gold", name = "Candlelit Smiling Jack-o'-Lantern", cost = "500g" },
+        { item = 282083, group = "For gold", name = "Unlit Smiling Jack-o'-Lantern", cost = "500g" },
+        { item = 282086, group = "For gold", name = "Buckled Witch Hat", cost = "250g" },
+        { item = 282090, group = "For gold", name = "Eternally Powered Glowskull", cost = "100g" },
+        { item = 282072, group = "For gold", name = "Enchanted Hallow's End Candle", cost = "100g" },
+        { item = 282051, group = "For gold", name = "Simple Hallow's End Candle", cost = "100g" },
+        { item = 282077, group = "For gold", name = "Spooky Scarecrow", cost = "500g" },
+        { item = 282095, group = "For gold", name = "Ominous Heartsbane Banner", cost = "500g" },
+        { item = 282075, group = "For gold", name = "Heartsbane Candle", cost = "100g" },
+        { item = 282092, group = "For gold", name = "Heartsbane Ritual Markings", cost = "500g" },
+        { item = 282100, group = "For gold", name = "Heartsbane Doom Catcher", cost = "100g" },
+        { item = 282098, group = "For gold", name = "Elaborate Heartsbane Doom Catcher", cost = "100g" },
+        -- Sold for Tricky Treats
+        { item = 282192, group = "For Tricky Treats", name = "Candlelit Shrieking Jack-o'-Lantern", price = 20, cost = "20 Tricky Treats" },
+        { item = 282194, group = "For Tricky Treats", name = "Candlelit Ogre Jack-o'-Lantern", price = 20, cost = "20 Tricky Treats" },
+        { item = 282196, group = "For Tricky Treats", name = "Filled Candy Bucket", price = 20, cost = "20 Tricky Treats" },
+        { item = 282198, group = "For Tricky Treats", name = "Unlit Shrieking Jack-o'-Lantern", price = 20, cost = "20 Tricky Treats" },
+        { item = 282200, group = "For Tricky Treats", name = "Unlit Ogre Jack-o'-Lantern", price = 20, cost = "20 Tricky Treats" },
+        { item = 282202, group = "For Tricky Treats", name = "Elaborate Heartsbane Ritual Markings", price = 15, cost = "15 Tricky Treats" },
+        { item = 282204, group = "For Tricky Treats", name = "Ominous Heartsbane Shrine", price = 25, cost = "25 Tricky Treats" },
+        { item = 282206, group = "For Tricky Treats", name = "Heartsbane Stone Circle", price = 15, cost = "15 Tricky Treats" },
+        { item = 282208, group = "For Tricky Treats", name = "Heartsbane Banner", price = 25, cost = "25 Tricky Treats" },
+        { item = 282213, group = "For Tricky Treats", name = "Looming Heartsbane Effigy", price = 25, cost = "25 Tricky Treats" },
+        { item = 282289, group = "For Tricky Treats", name = "Horrific Head of the Horseman", price = 20, cost = "20 Tricky Treats",
+          note = "Or free: guaranteed for beating the Headless Horseman in the Dungeon Finder." },
+        -- Recipes for crafted decor
+        { item = 284212, recipe = true, group = "Recipes", name = "Technique: Apple Bobbing Bucket", price = 20, cost = "20 Tricky Treats" },
+        { item = 284213, recipe = true, group = "Recipes", name = "Pattern: Spidery Witch Hat", price = 20, cost = "20 Tricky Treats" },
+        -- Achievement reward (this one can be checked)
+        { achievement = 10365, group = "Achievement reward", name = "Scarecrow Pepe", cost = "A Frightening Friend",
+          note = "Talk to Pepe in a level 3 garrison during Hallow's End to unlock A Tiny Scarecrow Costume." },
+    },
+    decorNote = "Where to buy: the gold and Tricky Treat pieces and the recipes are sold by Echo (Tirisfal Glades), Jack (Elwynn Forest), Spew Gutsout (Razorwind Shores), and Cordula Wolfgang (Founder's Point).",
 
     -- Ensembles are checked from their tooltip ("Already known")
     reminders = {
-        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", cost = "150 Tricky Treats",
+        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", price = 150, cost = "150 Tricky Treats",
           faction = "Alliance", note = "From Dorothy or Pippi, the Hallow's End vanity vendors." },
-        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", cost = "150 Tricky Treats",
+        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", price = 150, cost = "150 Tricky Treats",
           faction = "Horde", note = "From Chub or Woim, the Hallow's End vanity vendors." },
     },
 
@@ -203,6 +291,22 @@ HH.Holidays.HallowsEnd = {
             reveal = "The yearly quest from Spoops (Horde) or Jesper (Alliance) by the Wickerman sends you to "
                   .. "capital city innkeepers for treats, but each one wants a different emote first: "
                   .. "/flex, /train, /chicken, or /dance.",
+        },
+        {
+            teaser = "Secret: your neighborhood could use more cobwebs...",
+            reveal = "Look for Webspinner Egg Sacs around your neighborhood. Click one to turn into a spider for "
+                  .. "3 minutes and spin up to 10 webs, which adds to your Neighborhood Contribution. You can "
+                  .. "stop early, but then there's a 15-minute wait before you can be a spider again.",
+        },
+        {
+            teaser = "Secret: a glowing portal waits in your neighborhood...",
+            reveal = "Catch ghosts with the Ghost Gear and drop them in the Ghost Tank. When the neighborhood fills "
+                  .. "the tank, the Shade of Seabreaker Skoloth appears in the Holiday Hub. Click him to keep the "
+                  .. "Ghost Gear beam on him, get close, and press the flexing-arm extra action button to yank him "
+                  .. "forward. Keep doing it until he's in the glowing portal circle. He doesn't fight back, but watch "
+                  .. "the ground: purple swirls fear you and watery circles knock you back. More neighbors make it "
+                  .. "quicker. The portal opens a chest of Tricky Treats and Neighborhood Candy. The Headless Horseman "
+                  .. "himself sometimes shows up and summons another Shade.",
         },
         {
             teaser = "Secret: some candy buckets hide in the past...",

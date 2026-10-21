@@ -363,8 +363,25 @@ local function IsOwned(entry)
     if entry.reminderOnly or not entry.item then return nil end
 
     local kind = entry.kind
+    -- Drake armor manuscripts set a hidden, account-wide "unlocked" quest flag
+    if entry.unlockQuest then
+        return C_QuestLog.IsQuestFlaggedCompleted(entry.unlockQuest) and true or false
+    end
     if kind == "drake" or kind == "ensemble" then
         return KnownFromTooltip(entry.item)
+    end
+    if kind == "decor" then
+        -- Recipes for decor say "Already known" once learned
+        if entry.recipe then return KnownFromTooltip(entry.item) end
+        -- The housing catalog counts what you own: in storage, waiting to be
+        -- claimed, and placed. One or more counts as collected (the line
+        -- itself stays "N pieces", since decor can be owned many times over).
+        local catalog = C_HousingCatalog
+        if not (catalog and catalog.GetCatalogEntryInfoByItem) then return nil end
+        local ok, info = pcall(catalog.GetCatalogEntryInfoByItem, entry.item, true)
+        if not (ok and info) then return nil end
+        local total = (info.totalNumStored or 0) + (info.remainingRedeemable or 0) + (info.totalNumPlaced or 0)
+        return total > 0
     end
     if kind == "toy" then
         return PlayerHasToy(entry.item) and true or false
@@ -412,6 +429,10 @@ local function CountOwned(list)
     for _, entry in ipairs(list) do
         if not ForMyFaction(entry) then
             -- not for this character's faction
+        elseif entry.kind == "decor" then
+            -- decor ownership can't be read yet, so the line shows "N pieces"
+            -- (an achievement-reward piece still shows "collected" in the hover)
+            reminders = reminders + 1
         elseif entry.achievement or (entry.item and CHECKABLE[entry.kind] and not entry.reminderOnly) then
             total = total + 1
             local state = IsOwned(entry)
@@ -654,13 +675,19 @@ local function ListTooltip(title, list, colors, notes)
         local missingNames = false
         tt:AddLine(title, Hex(colors.main))
         -- Long lists (like a holiday's whole achievement list) only show what's left
-        local hideCollected = #list > 15
+        local hideCollected = #list > 15 and list[1].kind ~= "decor"
         local hidden = 0
+        local lastGroup
         for _, entry in ipairs(list) do
           local state = ForMyFaction(entry) and IsOwned(entry)
           if hideCollected and state == true then
             hidden = hidden + 1
           elseif ForMyFaction(entry) then
+            if entry.group and entry.group ~= lastGroup then
+                tt:AddLine(" ")
+                tt:AddLine(entry.group, Hex(colors.accent))
+                lastGroup = entry.group
+            end
             local name = ItemName(entry)
             if not entry.name and entry.item and not C_Item.GetItemNameByID(entry.item) then
                 C_Item.RequestLoadItemDataByID(entry.item)
@@ -787,6 +814,12 @@ local function CountLine(holidayName, field, list, colors, data)
         tooltip = ListTooltip(holidayName .. ": " .. info.label, list, colors),
         doneLabel = info.label,
     }
+    if field == "decor" then
+        local notes = {}
+        if data.decorNote then notes[#notes + 1] = data.decorNote end
+        notes[#notes + 1] = "Grey: you already have at least one."
+        spec.tooltip = ListTooltip(holidayName .. ": " .. info.label, list, colors, notes)
+    end
     if field == "achievements" then
         local target, linkTarget = AchievementToOpen(list, data)
         spec.tooltip = ListTooltip(holidayName .. ": " .. info.label, list, colors,
@@ -891,7 +924,7 @@ local function BuildLines(item)
             status = "\n" .. Color(SOFT, "Best roll: ")
                 .. (bestUsed and Color(GRAY, "used today") or Color(colors.main, "available"))
                 .. Color(SOFT, "  ·  This character: ")
-                .. (doneToday and Color(GRAY, "done") or Color(colors.main, "not done"))
+                .. (doneToday and Color(GRAY, "done") or Color("FF6B6B", "not done"))
         end
 
         local notes = {
@@ -977,6 +1010,34 @@ local function BuildLines(item)
         end
     end
 
+    -- Timed events, like a world quest that runs for part of every hour.
+    -- Asks the game for the time left; away from the zone it works it out from the clock.
+    for _, ev in ipairs(data.timedEvents or {}) do
+        local active = (item.daysAway == 0 and item.started ~= false)
+        if active and ForMyFaction(ev) then
+            local left = C_TaskQuest and C_TaskQuest.GetQuestTimeLeftMinutes and C_TaskQuest.GetQuestTimeLeftMinutes(ev.quest)
+            local into = (tonumber(date("%M")) - (ev.startMinute or 0)) % 60
+            local on, mins
+            if left and left > 0 then
+                on, mins = true, left
+            elseif into < ev.length then
+                on, mins = true, ev.length - into
+            else
+                on, mins = false, 60 - into
+            end
+            toGet[#toGet + 1] = {
+                icon = ICONS.reset,
+                text = ev.name,
+                right = on and Color(colors.main, "on now, " .. mins .. " min left") or Color(SOFT, "in " .. mins .. " min"),
+                tooltip = function(tt)
+                    tt:AddLine(ev.name, Hex(colors.main))
+                    tt:AddLine(("Runs for %d minutes at the start of every hour."):format(ev.length), 1, 1, 1, true)
+                    if ev.where then tt:AddLine(ev.where, 0.72, 0.68, 0.61, true) end
+                end,
+            }
+        end
+    end
+
     -- Collection counts: unfinished ones listed, finished ones folded into "Done"
     for _, field in ipairs(COUNT_ORDER) do
         local list = (field == "achievements") and HolidayAchievements(data) or data[field]
@@ -994,6 +1055,76 @@ local function BuildLines(item)
             else
                 toGet[#toGet + 1] = spec
             end
+        end
+    end
+
+    -- Holiday currency total: what one of everything you're still missing costs
+    -- (entries carry price = N in the holiday's currency, like Tricky Treats)
+    if data.currency then
+        local cur = data.currency
+        local need, parts = 0, {}
+        for _, field in ipairs(COUNT_ORDER) do
+            local sum = 0
+            for _, entry in ipairs(data[field] or {}) do
+                if entry.price and ForMyFaction(entry) and IsOwned(entry) ~= true then
+                    sum = sum + entry.price
+                end
+            end
+            if sum > 0 then
+                need = need + sum
+                parts[#parts + 1] = { COUNT_LABELS[field].label, sum }
+            end
+        end
+        -- Boss drops that are also sold (like the Hallowed Helm)
+        if data.boss and data.boss.drops then
+            local sum = 0
+            for _, entry in ipairs(data.boss.drops) do
+                if entry.price and ForMyFaction(entry) and IsOwned(entry) ~= true then
+                    sum = sum + entry.price
+                end
+            end
+            if sum > 0 then
+                need = need + sum
+                parts[#parts + 1] = { data.boss.name .. " drops (also sold)", sum }
+            end
+        end
+        local have = C_Item.GetItemCount(cur.item, true, false, true, true) or 0
+        local short = math.max(need - have, 0)
+        local Num = BreakUpLargeNumbers or tostring
+        local spec = {
+            icon = C_Item.GetItemIconByID(cur.item) or ICONS.collect,
+            text = cur.name .. " for the rest",
+            right = Color(need == 0 and GRAY or colors.main,
+                need == 0 and "all bought" or (Num(have) .. " / " .. Num(need))),
+            tooltip = function(tt)
+                tt:AddLine(name .. ": " .. cur.name, Hex(colors.main))
+                if need == 0 then
+                    tt:AddLine("You have everything sold for " .. cur.name .. ".", 1, 1, 1, true)
+                else
+                    tt:AddLine("One of everything you don't have yet costs:", 1, 1, 1, true)
+                    for _, part in ipairs(parts) do
+                        tt:AddDoubleLine("   " .. part[1], Num(part[2]), 0.72, 0.68, 0.61, 1, 1, 1)
+                    end
+                    tt:AddDoubleLine("Total", Num(need), 1, 0.82, 0, 1, 0.82, 0)
+                    tt:AddLine(" ")
+                    tt:AddDoubleLine("You have (bags and banks)", Num(have), 0.72, 0.68, 0.61, 1, 1, 1)
+                    if short > 0 then
+                        tt:AddDoubleLine("Still to earn", Num(short), 0.72, 0.68, 0.61, 1, 0.82, 0)
+                    else
+                        tt:AddLine("You have enough for all of it!", 0.4, 1, 0.4)
+                    end
+                end
+                if cur.note then
+                    tt:AddLine(" ")
+                    tt:AddLine(cur.note, 0.72, 0.68, 0.61, true)
+                end
+            end,
+        }
+        if need == 0 then
+            done[#done + 1] = cur.name
+            doneTooltips[#doneTooltips + 1] = spec
+        else
+            toGet[#toGet + 1] = spec
         end
     end
 
@@ -1107,10 +1238,40 @@ local function BuildLines(item)
 
     -- Assemble sections
     local specs = {}
-    local function Section(title, list)
+    -- Sections can fold up to one line (click the heading); remembered across holidays and characters
+    -- A holiday can color each section heading (colors.sections = { toGet, howTo, secrets })
+    local SECTION_KEYS = { ["Still to get"] = "toGet", ["How to"] = "howTo", ["Secrets"] = "secrets" }
+    local function Section(title, list, foldable)
         if #list == 0 then return end
-        specs[#specs + 1] = { header = title, colors = colors }
-        for _, spec in ipairs(list) do specs[#specs + 1] = spec end
+        local folded = foldable and HolidayHeraldDB.folded[title]
+        local sectionColor = colors.sections and colors.sections[SECTION_KEYS[title]]
+        local header = { header = title, colors = colors, color = sectionColor }
+        if foldable then
+            header.right = Color(sectionColor or SOFT, folded and ("+ show " .. #list) or "- hide")
+            header.tooltip = function(tt)
+                tt:AddLine(title, Hex(colors.main))
+                tt:AddLine(folded and ("Click to show all " .. #list .. ".") or "Click to fold this section up.", 1, 1, 1, true)
+                tt:AddLine("Remembered for every holiday card.", 0.72, 0.68, 0.61, true)
+            end
+            header.onClick = function()
+                HolidayHeraldDB.folded[title] = not folded or nil
+                GameTooltip:Hide()
+                if HH.Rerender then HH.Rerender() end
+            end
+        end
+        specs[#specs + 1] = header
+        if folded then return end
+        -- With section colors on, the counts in a section take that section's color
+        -- (so orange only means "How to" on Hallow's End, for example)
+        local from = "|cff" .. colors.main
+        local to = sectionColor and ("|cff" .. sectionColor)
+        for _, spec in ipairs(list) do
+            if to and to ~= from then
+                if type(spec.right) == "string" then spec.right = spec.right:gsub(from, to) end
+                if type(spec.text) == "string" then spec.text = spec.text:gsub(from, to) end
+            end
+            specs[#specs + 1] = spec
+        end
     end
 
     if hasGoals and #toGet == 0 then
@@ -1134,8 +1295,8 @@ local function BuildLines(item)
         end
         Section("Still to get", toGet)
     end
-    Section("How to", howTo)
-    Section("Secrets", secrets)
+    Section("How to", howTo, true)
+    Section("Secrets", secrets, true)
     return specs
 end
 
@@ -1247,10 +1408,14 @@ local function PlaceLine(parent, spec, x, y, width)
         b.text:SetPoint("TOPLEFT", 0, 0)
         b.text:SetWidth(width)
         b.text:SetText(spec.header:upper())
-        b.text:SetTextColor(DarkHex((spec.colors or DEFAULT_COLORS).main, 0.8))
-        b.right:SetText("")
+        if spec.color then
+            b.text:SetTextColor(Hex(spec.color))
+        else
+            b.text:SetTextColor(DarkHex((spec.colors or DEFAULT_COLORS).main, 0.8))
+        end
+        b.right:SetText(spec.right or "")
         b.icon:Hide()
-        b.tooltip, b.onClick = nil, nil
+        b.tooltip, b.onClick = spec.tooltip, spec.onClick
         b:SetHeight(16)
         b:Show()
         return 16
@@ -1320,6 +1485,8 @@ local function NewCard()
     c.title:SetShadowColor(0, 0, 0, 1)
     c.status = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     c.status:SetPoint("TOPLEFT", c.title, "BOTTOMLEFT", 0, -2)
+    c.status:SetJustifyH("LEFT")
+    c.status:SetWordWrap(true)
     return c
 end
 
@@ -1390,9 +1557,13 @@ local function PlaceCard(item, y, width, x)
     end
     c.title:SetShadowColor(DarkHex(colors.main, 0.25))
     c.title:SetShadowOffset(2, -2)
+    -- The status line can be long ("ends Nov 2 at 12:00 PM (1:00 PM your time)"),
+    -- so let it wrap inside the card and push the lines below down to fit
+    c.status:SetWidth(width - 46 - 10)
     c.status:SetText(StatusText(item))
+    local headerHeight = 9 + c.title:GetStringHeight() + 2 + c.status:GetStringHeight() + 6
 
-    local ly = -46
+    local ly = -math.max(46, math.ceil(headerHeight))
     for index, spec in ipairs(BuildLines(item)) do
         if spec.header and index > 1 then ly = ly - 4 end
         ly = ly - PlaceLine(c, spec, 12, ly, width - 24) - 3
@@ -1607,6 +1778,10 @@ local function Render(items)
     elseif not pendingData then
         retryCount = 0
     end
+end
+
+HH.Rerender = function()
+    if popup:IsShown() and lastItems then Render(lastItems) end
 end
 
 local function ShowPopup()
@@ -2138,7 +2313,7 @@ local function BuildSettings()
             return container:GetData()
         end
         CreateDropdown(category, setting, GetOptions,
-            "Holiday times follow the server's clock, like the in-game calendar. Show server time, your computer's time, or server time with yours after it. If the two clocks match, you'll only see one time.")
+            "Holiday times follow your realm's clock, the same one the in-game calendar uses. Each realm keeps its own time zone, so it isn't always Pacific. Show server time, your computer's time, or server time with yours after it. If the two clocks match, you'll only see one time.")
     end
     do
         local setting = Checkbox("showMinimap", "Minimap button", "Show the Holiday Herald button on the minimap.")
@@ -2217,6 +2392,7 @@ events:SetScript("OnEvent", function(self, event, arg1)
         HolidayHeraldDB = HolidayHeraldDB or {}
         HolidayHeraldDB.bestRoll = HolidayHeraldDB.bestRoll or {}
         HolidayHeraldDB.minimapIcon = HolidayHeraldDB.minimapIcon or {}
+        HolidayHeraldDB.folded = HolidayHeraldDB.folded or {}
         for key, value in pairs(DB_DEFAULTS) do
             if HolidayHeraldDB[key] == nil then HolidayHeraldDB[key] = value end
         end

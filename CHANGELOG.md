@@ -1,5 +1,26 @@
 # Holiday Herald
 
+## v1.6.8
+
+### New
+- Hallow's End: the new neighborhood dailies are on the Daily quests line: Sugar Run, Candy Crafting with Nomi (all three neighborhood themes), Broomstick Express, and Specter Inspector, with who gives them and where (Founder's Point or Razorwind Shores).
+- Hallow's End: a "Start here" tip for the Holiday Enthusiast in Silvermoon (51.2, 76.4) and his three lead-in quests.
+- Hallow's End: new Housing decor line with all 26 pieces. Hover to see them grouped by gold, Tricky Treats, recipes, and the Scarecrow Pepe achievement reward, with prices and where to buy them. Pieces you already have (and recipes you know) turn grey, and Pepe shows as collected once you've earned A Frightening Friend.
+- Hallow's End: a Tricky Treats line adds up what one of everything you don't have yet would cost (toys, pets, transmog, the ensemble, and decor), next to how many Tricky Treats you're carrying. Hover for the breakdown.
+- Hallow's End: a Community Candy Crawl line shows whether the hourly neighborhood candy hunt is on now, or how long until the next one.
+- Hallow's End: Broomstick Express now reminds you to switch to steady flight first.
+- Hallow's End: two new neighborhood secrets: turning into a spider, and the Ghost Tank's portal chest.
+- Hallow's End: a reminder to catch 10 ghosts at least once for I Ain't Afraid of no Ghost.
+- The How to and Secrets sections on a holiday card fold up: click the heading to hide or show them. It's remembered for every card.
+- Each holiday's section headings (Still to get, How to, Secrets) have their own colors from that holiday's theme, and the counts match their section.
+- The holiday boss line shows "not done" in red so it stands out.
+
+### Fixes
+- Hallow's End: Little Wickerman's price corrected to 100 Tricky Treats.
+- Drake armor manuscripts are now checked off correctly once learned, on every character. (They were showing as still needed.)
+- Long start and end times on a holiday card now wrap inside the card instead of running past the edge.
+- The Start and end times tooltip explains that server time is your realm's clock, which isn't always Pacific.
+
 ## v1.6.7
 
 ### Improvements

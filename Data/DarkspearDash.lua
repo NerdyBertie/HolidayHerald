@@ -15,6 +15,7 @@ HH.Holidays.DarkspearDash = {
         card   = "14201E",
         border = "4FC3A1",
         titleGradient = { "FF5A5A", "FFB04A", "FFE45A", "6EE07A", "5AB4FF", "B48CFF" },   -- rainbow, for the Rainbow Roll
+        sections = { toGet = "FF6E6E", howTo = "FFB04A", secrets = "FFE45A" },   -- red, orange, yellow
     },
 
     tip = {

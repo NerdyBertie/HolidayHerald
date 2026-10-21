@@ -16,6 +16,7 @@ HH.Holidays.PilgrimsBounty = {
         card   = "22141A",
         border = "C2414F",
         titleGradient = { "E0B05A", "C2414F" },             -- harvest gold -> cranberry
+        sections = { toGet = "E0B05A", howTo = "E8913A", secrets = "D9566A" },   -- harvest gold, squash, cranberry
     },
 
     achievements = {

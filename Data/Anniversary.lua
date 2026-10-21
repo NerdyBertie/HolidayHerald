@@ -17,6 +17,7 @@ HH.Holidays.Anniversary = {
         card   = "1C1A16",
         border = "C9963F",
         titleGradient = { "3F8CFF", "E3C27A", "C41E3A" },   -- Alliance blue -> bronze -> Horde crimson
+        sections = { toGet = "5FA0FF", howTo = "E3C27A", secrets = "E04A5E" },   -- Alliance blue, bronze, Horde crimson
     },
 
     achievements = {
