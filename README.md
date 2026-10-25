@@ -1,61 +1,220 @@
-<p align=center><img width="254" height="254" alt="HolidayHerald-icon-512" src="https://github.com/user-attachments/assets/cf2cd51f-cefe-4cfd-b766-85edaf6d1c80" /></p>
+<p align="center"><img width="254" height="254" alt="ItemWatch_Wago_optimized" src="https://github.com/user-attachments/assets/16987d0f-24e3-4b37-9d72-f392d21670c2" /></p>
 
-# Holiday Herald
+ItemWatch & Shopping List
+=========
 
-**Never miss a holiday again!** Holiday Herald reads the in-game calendar and tells you what's happening now and in the next week: what you can still collect, where to go, what to do each day, and a few secrets most players never find.
+A World of Warcraft addon for tracking specific item counts — a movable,
+resizable box you drag items into, with goals, per-item sounds, and a
+minimap button. Now also builds a shopping list straight from any
+crafting recipe.
 
-Built after missing Pirates' Day (and the Jolly Roger toy) five days after getting "Avast Ye, Admiral!" *sigh*. Never again!
+Built for farming, collecting, or any situation where you need to keep an
+eye on an exact item count without repeatedly opening your bags.
 
 ## Features
 
-- **ItemWatch support!** If a holiday asks you to buy something, like the profession quest supplies at the Darkmoon Faire or the cookie ingredients for Winter Veil, Ctrl-click the shopping line on the holiday card to add the whole list to ItemWatch in one go, with the amounts added on top of any goals you've already set.
-- **Daily quest checklist.** Holidays with dailies show how many you've done today, like "2 of 10," grouped by where you do them. Hover for who gives each quest and where. It resets with the daily reset, so you always know what's left.
-- **Daily reset time.** A line under the holiday cards shows exactly when dailies reset, with a countdown on hover.
-- **Server time or your time.** Choose how start, end, and reset times are shown: server time (like the in-game calendar), your own time, or both side by side.
-- **Themed holiday cards.** Each holiday gets its own colors, title style, and icon, even in chat messages.
-- **Collection tracking.** Mounts, toys, pets, transmog, drake armor manuscripts, ensembles, and achievements are checked against your collection. Collected items gray out, so you only see what you're missing.
-- **Housing decor shopping list.** Every piece of a holiday's decor in one hover, grouped by what it costs, with where to buy it. Pieces you already have turn gray.
-- **Holiday currency totals.** See how many Tricky Treats (and more to come) you'd need for one of everything you're still missing, next to how many you have.
-- **Event timers.** Hourly events, like Hallow's End's Community Candy Crawl in your neighborhood, show whether they're on now or how long until the next one.
-- **Always-current achievements.** Each holiday's achievement list is read straight from the game, so brand new achievements show up on their own. Hover to see only what you still need.
-- **Holiday boss info.** See every drop at a glance, plus whether your account's best daily roll is still available and whether this character has done the boss today. Click the boss line to open the Dungeon Finder with the holiday dungeon already picked. Just hit Find Group! And if you're still missing the boss's mount, you get a little "good luck!" too.
-- **Clickable achievements.** Click any achievement line to open it, or shift-click to link it in chat. Meta lines jump straight to the holiday's part of _What a Long, Strange Trip It's Been_ (Violet Proto-Drake).
-- **Smart shopping lists.** Holidays that need you to bring something list it for you, like Winter Veil's cookies and the ingredients to bake them. Profession quests only show what your professions need.
-- **Exact times.** See exactly when each holiday starts and ends, down to the minute.
-- **Tips for new and returning players.** Hover for where to go, what to do, and which expansion a zone belongs to. Got TomTom? Use its /way command with any coordinates for an arrow.
-- **Secrets!** Spoiler teasers that only reveal when you hover. Hidden pets, sneaky toys, and more.
-- **Fold-up sections.** Already read the tips and secrets? Click the heading to fold them away. Each holiday's sections get their own colors from its theme.
-- **Class goodies.** Lines like "Hunters: tame the Pink Elekk!" are shown to everyone, so you won't miss something for your alts.
-- **Short-holiday alerts.** One-day holidays get a loud on-screen alert, so they can't slip by.
-- **Stays quiet.** A full popup when a holiday first shows up and again on the day it starts, then just a chat line after that. Click the chat link, or type `/herald` at any time to see the popup.
-- **Micro-holidays.** Little holidays like The Great Gnomeregan Run get a chat line on the day and their own card.
-- **Weekly events.** PvP Brawls, bonus events, and Timewalking (with its expansion) listed in their own section.
-- **Trading Post reminder.** See your Trader's Tender at a glance, get a heads-up when new items arrive on the 1st, and click to open the Traveler's Log.
-- **Celebration toast.** Finish a holiday's meta and the NerdyBertie herald gives you a thumbs-up. (I call her Matilda) <3
-- **Achievement toasts.** Every achievement you earn gets a little cheer from a very dapper herald.
-- **Tidy layout.** With three or more holidays at once, the popup switches to two columns.
+- **Item Box** — a movable, resizable container for everything you're
+  tracking. Drag items from your bags straight onto it, right-click an
+  icon inside to remove it.
+- **Recipe Shopping List** — click "Add to Shopping List" on any recipe
+  in the Professions Recipes tab, and ItemWatch reads its full reagent
+  list and builds a shopping list for you automatically. It holds as
+  many recipes as you like, so leveling a profession is easy: add the
+  wrist guards, the chest and the legs, and any materials they share
+  (like metal bars) are added together into one row with the combined
+  total. Each recipe has its own "how many" box and an x to remove it,
+  and clicking "Add to Shopping List" on a recipe that's already there
+  adds one more. Required reagents track live progress (counting bank
+  and warband bank, not just bags) and show a "Need: X" line for
+  anything you're still short on, so there's no mental math while
+  you're standing at the Auction House. Optional/finishing reagents
+  show as a plain reminder, and reagents you can't buy on the Auction
+  House are flagged "[vendor/earned only]" instead of silently
+  vanishing. The window is movable, resizable, lockable, scrolls with
+  the mouse wheel, persists across logout/reload, and has a "Clear all"
+  button (it asks first) to start over.
+- **Quick-Add popup** — track items you don't have yet by pasting a
+  Wowhead link, typing an item ID, or shift-clicking an item straight
+  into the field. Set a goal and sound in one step.
+- **Per-item edit popup** — left-click any tracked icon to change its
+  goal or pick its own custom "goal reached" sound (or mute it).
+- **Per-item ding sounds** — no more one generic sound for everything;
+  give each tracked item its own, so you know what just hit its goal
+  without looking. A growing collection of fun/thematic presets alongside
+  the practical ones - see the Sound Presets section below for the full
+  list.
+- **Shift-click to link, Ctrl-click to preview** — tracked icons behave
+  like real item icons for chat links and equippable-gear previews.
+- **Character-specific tracking** — each character keeps its own list.
+  The main Item Box is deliberately bags + reagent bag only, real-time,
+  so counts are always exactly accurate (no bank/warband padding the
+  number). The Shopping List is the one place that does check your bank
+  and warband, since it's answering a different question - "do I still
+  need to go buy this."
+- **Blizzard Edit Mode support** for the box.
+- **Combat / pet battle visibility toggles** — hide the box automatically
+  if you'd rather it stay out of the way. Tracking keeps running in the
+  background regardless.
+- **Minimap button** — left-click to show/hide the box, right-click for
+  settings. Built on LibDataBroker + LibDBIcon, so it's automatically
+  compatible with minimap button "tray" addons.
+- **Works great with [Holiday Herald](https://www.curseforge.com/projects/1723649)!**
+  Ctrl-click a holiday's shopping list in Holiday Herald to add every item
+  to ItemWatch in one go, with the amounts added on top of your current
+  goals.
+- **In-game documentation** — the settings panel has expandable
+  sub-pages covering how to use ItemWatch, the Recipe Shopping List,
+  practical usage ideas (like Auction House shopping lists built from
+  the main box), and contact/support info.
+- **What's New** — after each update, a clickable "patch notes" link
+  appears in chat. Click it to see the highlights, or bring them back any
+  time with `/iw whatsnew`.
+- **NerdyBertie's Addon Workshop** — ItemWatch's settings live under a
+  shared Workshop page in Options > AddOns, which lists my other addons
+  (the ones you have installed are marked).
+- All the original `/iw` slash commands still work, unchanged — the box
+  and popups are additional ways in, not replacements.
+- Lightweight — event-driven, no polling.
 
-## Holidays covered
+## Installation
 
-Full cards: Brewfest, Hallow's End, Day of the Dead, Pilgrim's Bounty, Feast of Winter Veil, WoW's Anniversary, Lunar Festival, Darkmoon Faire, and Pirates' Day.
+**Recommended:** install via [CurseForge](https://www.curseforge.com/wow/addons/item-watch).
 
-Micro-holidays: The Great Gnomeregan Run, Moonkin Festival, Wanderer's Festival, New Year's Fireworks, and Call of the Scarab.
+**Manual install:**
+1. Download the latest release, or clone this repo.
+2. Copy the `ItemWatch` folder (including the `Libs` subfolder) into your
+   WoW AddOns directory: `World of Warcraft/_retail_/Interface/AddOns/`
+3. Restart WoW or `/reload`.
 
-Every other holiday (Love is in the Air, Noblegarden, Children's Week, Midsummer, and Darkspear Dash) has a themed card, with full details added before each one arrives.
+## Usage
 
-Works in every region. Holiday details currently need an English game client; holidays still show with their dates on other languages.
+**The easy way:**
+1. Drag an item from your bags onto the box to start tracking it.
+2. Left-click the icon inside the box to set a goal and pick a sound.
+3. Right-click the icon to stop tracking it.
 
-## Commands
+**For items you don't have yet:**
+1. Click the "+" on the box (or right-click empty space inside it).
+2. Paste a Wowhead link, type the item ID, or shift-click an item to fill
+   the field automatically.
+3. Set a goal and sound preference, click Track.
 
-- `/herald`: show the popup
-- `/herald options`: open settings
-- `/herald resetpos`: move the popup back to the middle of the screen
-- Minimap button and addon compartment: left-click for the popup, right-click for settings
+**Building a shopping list from a recipe:**
+1. Open any profession's Recipes tab and select a recipe.
+2. Click "Add to Shopping List."
+3. Open another recipe and click it again to add it too. Shared
+   materials are combined into one total. Change a recipe's "how many"
+   box, or click the x to take it off the list.
+4. Required reagents show live have/needed progress (bank + warband bank
+   included), optional reagents show as a reminder, and anything you
+   can't buy is flagged "[vendor/earned only]."
+5. The window sticks around - move it, resize it, lock it, scroll it, or
+   just leave it open. It'll still be there if you log out mid-farm. The
+   X only hides it (`/iw shopping` brings it back); "Clear all" empties
+   the list.
+
+### Commands
+
+| Command | Description |
+|---|---|
+| `/iw add [itemID]` | Start tracking an item |
+| `/iw remove [itemID]` | Stop tracking an item |
+| `/iw list` | List everything currently tracked |
+| `/iw clear` | Remove all tracked items (asks to confirm) |
+| `/iw lock` | Lock the box in place |
+| `/iw unlock` | Unlock the box so you can move/resize it |
+| `/iw goal [itemID] [amount]` | Set a target amount for an item |
+| `/iw goal [itemID] clear` | Remove the goal for an item |
+| `/iw sound [itemID] on\|off` | Toggle the goal-reached sound for an item |
+| `/iw testsound` | Preview the default goal sound |
+| `/iw addrecipe` | Add the currently-open recipe to the Shopping List |
+| `/iw shopping` | Show the Shopping List window again |
+| `/iw whatsnew` | Show the What's New highlights again |
+| `/iw options` | Open the settings panel |
+
+Ctrl+Shift+Click an item in your bags also adds it directly, no item ID
+needed (default Blizzard bag UI only).
 
 ## Settings
 
-Find them under **Options → AddOns → NerdyBertie → Holiday Herald**. A quick setup for how loud Holiday Herald is: All on (alerts + sounds), Visuals only (no sounds), or Quiet (popup + chat only). Plus toggles for every piece: themes, tips, secrets, alerts, sounds, the start-day popup, achievement toasts, the daily reset line, the Trading Post reminder, how times are shown, and more. There's also a button to reset the popup's position.
+Find ItemWatch's settings under Options > AddOns > ItemWatch in-game, or
+type `/iw options`, or right-click the minimap button. From there you can
+set per-item sounds, combat/pet-battle visibility toggles, and show/hide
+the minimap button.
 
-The AddOns and Options menus now group my addons together, so you can find them all under the NerdyBertie heading (minus plugins that depend on other addons, like Dive Bar Front Crawl for the Tortollan housing endeavor).
+The settings panel also has an expandable "+" with sub-pages: **Helpful
+Information** (how everything works), **Shopping List** (how the
+recipe-based shopping list works), **Practical Uses** (real workflows
+like building an Auction House list from the main box), **Contact/Support**,
+and **About**.
 
-Enjoying Holiday Herald? Consider supporting me on [Ko-fi](https://ko-fi.com/nerdybertie). Thank you!
+## Sound Presets
+
+Every tracked item can play its own sound when its goal is reached - mix
+and match as many as you like, or leave one as your global default.
+Alongside the practical picks (Ready Check, Achievement Ding, Coin Sound),
+there's a growing collection of fun/thematic ones:
+
+- **Orc Peon** - "Work Complete!" (the default) and "Me not that kind of orc!"
+- **Commander Ulthok** - startling, you've been warned
+- **Illidan** - "You are not prepared!"
+- **Brann Bronzebeard** - "Here we go!" and "Time to go all out!"
+- **Horde Legends** - Thrall ("Lok'tar!"), Sylvanas ("So it is done"),
+  Baine Bloodhoof ("For the Horde, always"), Monte Gazlowe ("Business is
+  Boomin'!")
+- **Alliance Champions** - Genn Greymane ("So many... dead..." - a bit
+  morbid, fun for skinners!), Tyrande Whisperwind ("Ishnu-ala"), Magni
+  Bronzebeard ("Always more work to be done"), Gelbin Mekkatorque
+  ("There's always time to tinker")
+
+Prefer something not on the list? There's also a **Custom FileDataID**
+option, so you can use any sound file ID you can find (try
+[wago.tools/files](https://wago.tools/files) or search
+[wowhead.com/sounds](https://www.wowhead.com/sounds)).
+
+## Notes
+
+- Tracked items are saved per-character, so each character keeps their
+  own independent list.
+- The addon bundles LibStub, CallbackHandler-1.0, LibDataBroker-1.1, and
+  LibDBIcon-1.0 in the `Libs` folder for the minimap button - these are
+  widely-used shared libraries, not custom code.
+- **Manual install / cloning:** make sure the `Libs` folder (and its four
+  subfolders) comes along with `ItemWatch.lua` and `ItemWatch.toc` into
+  your AddOns folder. If you use GitHub's green "Code" button and download
+  the ZIP, this happens automatically. If you're grabbing files one at a
+  time, don't skip `Libs` - without it, the minimap button won't appear
+  (the rest of the addon still works fine, it just quietly skips that
+  one feature).
+- The Ctrl+Shift+Click add-from-bags shortcut only works with Blizzard's
+  default bag UI. If you use a bag-replacement addon, use `/iw add [itemID]` or the Quick-Add
+  popup instead.
+
+## Contributing / Issues
+
+Found a bug or have a feature idea? Open an issue — feedback and
+suggestions welcome.
+
+## License
+
+MIT — see LICENSE for details.
+
+## More from NerdyBertie
+
+If ItemWatch is helping you keep your farming lazy and your crafting organized, feel free to check out my other addons!
+
+- **HandyNotes: Dive Bar Front Crawl** — map pins for every underwater Tortollan dive bar in the Dive Bar Front Crawl housing endeavor
+- **HandyNotes: Seeking the Soulstones** — map pins for finding the soulstones, as part of the Warlock Green Fire questchain in Outland
+- **Boomkin Buff Watcher** — keeps Balance Druids on top of their Astral Power and Eclipse state
+- **Holiday Herald** — friendly reminders when in-game holidays start, with links to their meta-achievements, goodies, secrets, and more!
+
+Find them all by searching **NerdyBertie** on CurseForge, WoWInterface, WowUp, or Wago.
+
+---
+
+If you find ItemWatch useful, consider supporting me on
+[Ko-fi](https://ko-fi.com/nerdybertie) — totally optional, but always
+appreciated! You can also find me on
+[Twitch](https://www.twitch.tv/nerdybertie),
+[YouTube](https://www.youtube.com/@nerdybertie), or
+[Discord](https://discord.gg/bXbMR6rzcF) - NerdyBertie's Tinker Workshop
