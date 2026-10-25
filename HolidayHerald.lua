@@ -29,6 +29,7 @@ local DB_DEFAULTS = {
     timeDisplay  = "realm",    -- start/end times: "realm", "local", or "both"
     showReset    = true,       -- "Daily reset: ..." line under the holiday cards
     popupOnStart = true,       -- show the popup again on the day a holiday starts
+    showPins     = true,       -- HandyNotes map pins (only if HandyNotes is installed)
 }
 local FANFARE_SOUND_ID     = 888    -- level-up fanfare (VERIFY sound choice)
 local BIG_FANFARE_SOUND_ID = 888    -- for the Violet Proto-Drake (VERIFY sound choice)
@@ -847,6 +848,52 @@ end
 local shoppingNext = {}
 
 -- Builds the card's lines, grouped under small section headers
+---------------------------------------------------------------------------
+-- Holiday currency across the account. Each character's own count (bags and
+-- their own banks) is remembered when it changes; the warband bank is shared,
+-- so it's counted once. Other characters' counts are as of their last login.
+---------------------------------------------------------------------------
+local function MyCharKey()
+    return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?")
+end
+
+-- Saves this character's count of one currency item. Returns true if it changed.
+local function SaveCurrencyCount(itemID)
+    local mine = C_Item.GetItemCount(itemID, true, false, true, false) or 0
+    local all = C_Item.GetItemCount(itemID, true, false, true, true) or mine
+    HolidayHeraldDB.currencyCounts = HolidayHeraldDB.currencyCounts or {}
+    local byChar = HolidayHeraldDB.currencyCounts[itemID] or {}
+    HolidayHeraldDB.currencyCounts[itemID] = byChar
+    local key = MyCharKey()
+    local old, oldWarband = byChar[key], byChar["#warband"]
+    byChar[key] = (mine > 0) and mine or nil
+    byChar["#warband"] = math.max(all - mine, 0)
+    return old ~= byChar[key] or oldWarband ~= byChar["#warband"]
+end
+
+-- Returns the account total, and a sorted list of { name, count } (you first, warband bank last)
+local function AccountCurrency(itemID)
+    SaveCurrencyCount(itemID)
+    local byChar = (HolidayHeraldDB.currencyCounts or {})[itemID] or {}
+    local me = MyCharKey()
+    local total, rows = 0, {}
+    for key, count in pairs(byChar) do
+        if key ~= "#warband" and count > 0 then
+            total = total + count
+            rows[#rows + 1] = { key:match("^(.-)%-") or key, count, key == me }
+        end
+    end
+    table.sort(rows, function(a, b)
+        if a[3] ~= b[3] then return a[3] end
+        return a[2] > b[2]
+    end)
+    local warband = byChar["#warband"] or 0
+    total = total + warband
+    if warband > 0 then rows[#rows + 1] = { "Warband bank", warband } end
+    return total, rows
+end
+HH.SaveCurrencyCount = SaveCurrencyCount
+
 local function BuildLines(item)
     local data = item.data
     local colors = (HolidayHeraldDB.showThemes and data.colors) or DEFAULT_COLORS
@@ -1088,7 +1135,7 @@ local function BuildLines(item)
                 parts[#parts + 1] = { data.boss.name .. " drops (also sold)", sum }
             end
         end
-        local have = C_Item.GetItemCount(cur.item, true, false, true, true) or 0
+        local have, haveRows = AccountCurrency(cur.item)
         local short = math.max(need - have, 0)
         local Num = BreakUpLargeNumbers or tostring
         local spec = {
@@ -1107,7 +1154,11 @@ local function BuildLines(item)
                     end
                     tt:AddDoubleLine("Total", Num(need), 1, 0.82, 0, 1, 0.82, 0)
                     tt:AddLine(" ")
-                    tt:AddDoubleLine("You have (bags and banks)", Num(have), 0.72, 0.68, 0.61, 1, 1, 1)
+                    tt:AddDoubleLine("Your account has", Num(have), 0.72, 0.68, 0.61, 1, 1, 1)
+                    for _, row in ipairs(haveRows) do
+                        tt:AddDoubleLine("   " .. row[1] .. (row[3] and " (you)" or ""), Num(row[2]),
+                            0.55, 0.52, 0.47, 0.72, 0.68, 0.61)
+                    end
                     if short > 0 then
                         tt:AddDoubleLine("Still to earn", Num(short), 0.72, 0.68, 0.61, 1, 0.82, 0)
                     else
@@ -1118,6 +1169,7 @@ local function BuildLines(item)
                     tt:AddLine(" ")
                     tt:AddLine(cur.note, 0.72, 0.68, 0.61, true)
                 end
+                tt:AddLine("Other characters' counts are from the last time you logged in on them.", 0.55, 0.52, 0.47, true)
             end,
         }
         if need == 0 then
@@ -1139,9 +1191,10 @@ local function BuildLines(item)
     -- More tips (can be faction-specific)
     for _, extra in ipairs(HolidayHeraldDB.showTips and data.moreTips or {}) do
         if ForMyFaction(extra) then
+            -- warning = true: a red line with a skull, for "this will kill you" tips
             howTo[#howTo + 1] = {
-                icon = ICONS.tip,
-                text = Color("C9C1B1", extra.short),
+                icon = extra.warning and ICONS.boss or ICONS.tip,
+                text = Color(extra.warning and "FF6B6B" or "C9C1B1", extra.short),
                 tooltip = extra.hover and TextTooltip(extra.title or (name .. " tip"), colors, extra.hover),
             }
         end
@@ -1831,11 +1884,214 @@ end
 
 -- While you're playing: if a holiday starts (most begin at midnight or in the
 -- morning), pop up once for it. Waits until you're out of combat.
-local function CheckForNewStarts()
-    if not (HolidayHeraldDB.showPopup and HolidayHeraldDB.popupOnStart) then return end
-    if InCombatLockdown() or popup:IsShown() then return end
+-- Holiday bosses whose dungeon is open right now, and when the next holiday
+-- starts (calendar time), both refreshed whenever the calendar is scanned
+local activeBossLfg = {}
+local nextStartAt = nil
+local activeHolidayData = {}   -- data for every holiday that's on right now
+
+---------------------------------------------------------------------------
+-- HandyNotes map pins (optional: only if HandyNotes is installed)
+-- A holiday's data can list pins = { { map = uiMapID, x = 53.9, y = 33.8,
+--   title = "...", note = { "line", { "left", "right" }, ... }, faction = "Horde", warning = true,
+--   icon = "Interface\\Icons\\..." (optional, replaces the pin icon), noContinent = true } }
+-- Pins only show while that holiday is on, and only for your faction.
+---------------------------------------------------------------------------
+local PIN_ICON = "Interface\\AddOns\\HolidayHerald\\Media\\icon"
+local pinLookup = {}   -- [uiMapID] = { [coord] = { pin = pin, data = data } }
+
+local function PackCoord(x, y)
+    return math.floor(x * 100 + 0.5) * 10000 + math.floor(y * 100 + 0.5)
+end
+
+-- The continent a zone map sits on (nil if none)
+local function ContinentOf(uiMapID)
+    local info = C_Map.GetMapInfo(uiMapID)
+    while info and info.parentMapID and info.parentMapID ~= 0 do
+        info = C_Map.GetMapInfo(info.parentMapID)
+        if info and info.mapType == Enum.UIMapType.Continent then return info.mapID end
+    end
+end
+
+local function AddPin(uiMapID, x, y, entry)
+    pinLookup[uiMapID] = pinLookup[uiMapID] or {}
+    pinLookup[uiMapID][PackCoord(x, y)] = entry
+end
+
+local function RebuildPins()
+    wipe(pinLookup)
+    if not HolidayHeraldDB.showPins then return end
+    for _, data in ipairs(activeHolidayData) do
+        for _, pin in ipairs(data.pins or {}) do
+            if ForMyFaction(pin) then
+                AddPin(pin.map, pin.x, pin.y, { pin = pin, data = data })
+                -- Also show it on the continent map (smaller), placed by where the zone sits on it
+                local cont = not pin.noContinent and ContinentOf(pin.map)
+                local minX, maxX, minY, maxY
+                if cont then minX, maxX, minY, maxY = C_Map.GetMapRectOnMap(pin.map, cont) end
+                if minX and maxX and minY and maxY and maxX > minX and maxY > minY then
+                    local cx = (minX + pin.x / 100 * (maxX - minX)) * 100
+                    local cy = (minY + pin.y / 100 * (maxY - minY)) * 100
+                    if cx > 0 and cx < 100 and cy > 0 and cy < 100 then
+                        AddPin(cont, cx, cy, { pin = pin, data = data, onContinent = true })
+                    end
+                end
+            end
+        end
+    end
+end
+
+local PinHandler = {}
+
+function PinHandler:GetNodes2(uiMapID, minimap)
+    local nodes = pinLookup[uiMapID]
+    local coord
+    return function()
+        if not nodes then return nil end
+        local entry
+        coord, entry = next(nodes, coord)
+        if coord then
+            local icon = entry.pin.icon or (entry.pin.warning and ICONS.boss) or PIN_ICON
+            return coord, nil, icon, entry.onContinent and 1 or 1.4, 1
+        end
+    end
+end
+
+-- HandyNotes calls these with self = the pin on the map
+function PinHandler:OnEnter(uiMapID, coord)
+    local entry = pinLookup[uiMapID] and pinLookup[uiMapID][coord]
+    if not entry then return end
+    local tt = GameTooltip
+    tt:SetOwner(self, (self:GetCenter() > UIParent:GetCenter()) and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
+    local colors = (HolidayHeraldDB.showThemes and entry.data.colors) or DEFAULT_COLORS
+    tt:AddLine(entry.pin.title, Hex(entry.pin.warning and "FF6B6B" or colors.main))
+    local where = ("(%.1f, %.1f)"):format(entry.pin.x, entry.pin.y)
+    if entry.onContinent then
+        local zone = C_Map.GetMapInfo(entry.pin.map)
+        if zone then where = "(" .. zone.name .. " " .. where:sub(2) end
+    end
+    tt:AddLine((entry.data.name or "Holiday") .. "  " .. where, 0.72, 0.68, 0.61)
+    local note = entry.pin.note
+    if type(note) == "string" then note = { note } end
+    for _, line in ipairs(note or {}) do
+        if type(line) == "table" then
+            tt:AddDoubleLine(line[1], line[2], 1, 1, 1, 0.72, 0.68, 0.61)
+        elseif line:sub(1, 1) == "#" then
+            tt:AddLine(" ")
+            tt:AddLine(line:sub(2), Hex(colors.accent))
+        else
+            tt:AddLine(line, 1, 1, 1, true)
+        end
+    end
+    if TomTom and TomTom.AddWaypoint then
+        tt:AddLine(" ")
+        tt:AddLine("Click: set a TomTom waypoint", 1, 0.82, 0)
+    end
+    tt:Show()
+end
+
+function PinHandler:OnLeave()
+    GameTooltip:Hide()
+end
+
+function PinHandler:OnClick(button, down, uiMapID, coord)
+    if button ~= "LeftButton" or down then return end
+    local entry = pinLookup[uiMapID] and pinLookup[uiMapID][coord]
+    if entry and TomTom and TomTom.AddWaypoint then
+        TomTom:AddWaypoint(entry.pin.map, entry.pin.x / 100, entry.pin.y / 100, { title = entry.pin.title, from = "Holiday Herald" })
+    end
+end
+
+HH.RefreshPins = function()
+    RebuildPins()
+    if HandyNotes and HandyNotes.SendMessage then
+        HandyNotes:SendMessage("HandyNotes_NotifyUpdate", "HolidayHerald")
+    end
+end
+
+local function RegisterHandyNotes()
+    if not (HandyNotes and HandyNotes.RegisterPluginDB) then return end
+    HandyNotes:RegisterPluginDB("HolidayHerald", PinHandler, {
+        type = "group",
+        name = "Holiday Herald",
+        desc = "Holiday spots, shown only while that holiday is on.",
+        args = {
+            about = {
+                type = "description", order = 1,
+                name = "Pins for the holidays that are on right now, like event hubs and hard-to-find vendors. "
+                    .. "Hover a pin for details. With TomTom installed, click one to set a waypoint.",
+            },
+        },
+    })
+end
+
+-- Re-save this character's count for the currencies of holidays that are on now
+local function SaveActiveCurrencies()
+    for _, data in ipairs(activeHolidayData) do
+        if data.currency then HH.SaveCurrencyCount(data.currency.item) end
+    end
+end
+
+local function NoteScan(items)
+    wipe(activeBossLfg)
+    wipe(activeHolidayData)
+    nextStartAt = nil
+    for _, item in ipairs(items) do
+        if item.data and item.daysAway == 0 and item.started ~= false then
+            activeHolidayData[#activeHolidayData + 1] = item.data
+        end
+        local boss = item.data and item.data.boss
+        if boss and boss.lfg and item.daysAway == 0 and item.started ~= false then
+            activeBossLfg[boss.lfg] = true
+        end
+        if item.category == "holiday" and item.started == false and item.startEpoch then
+            nextStartAt = math.min(nextStartAt or item.startEpoch, item.startEpoch)
+        end
+    end
+    HH.RefreshPins()
+end
+
+-- Saves "best roll used" for the account as soon as the game says the holiday
+-- boss is done today, on whichever character did it (no need to open the popup)
+local function RecordBestRolls()
+    if not GetLFGDungeonRewards then return end
+    for lfg in pairs(activeBossLfg) do
+        if GetLFGDungeonRewards(lfg) then
+            HolidayHeraldDB.bestRoll[lfg] = GetServerTime() + (C_DateAndTime.GetSecondsUntilDailyReset() or 0)
+        end
+    end
+end
+
+-- Instead of checking every minute, set one alarm: for the moment the next
+-- holiday starts, or in 6 hours as a safety net if the calendar changes
+local SAFETY_CHECK = 6 * 3600
+local wakeTimer
+local CheckForNewStarts
+
+local function ScheduleNextCheck(delay)
+    if wakeTimer then wakeTimer:Cancel() end
+    if not delay then
+        delay = SAFETY_CHECK
+        local nowCal = ToEpoch(C_DateAndTime.GetCurrentCalendarTime())
+        if nextStartAt and nowCal then
+            delay = math.min(delay, nextStartAt - nowCal + 5)   -- a few seconds after it starts
+        end
+    end
+    wakeTimer = C_Timer.NewTimer(math.max(5, delay), function() CheckForNewStarts() end)
+end
+
+CheckForNewStarts = function()
+    -- Busy? Try again in a minute
+    if InCombatLockdown() or popup:IsShown() then
+        ScheduleNextCheck(60)
+        return
+    end
     local seen = HolidayHeraldCharDB.seen
     local items = ScanCalendar()
+    NoteScan(items)
+    RecordBestRolls()
+    ScheduleNextCheck()
+    if not (HolidayHeraldDB.showPopup and HolidayHeraldDB.popupOnStart) then return end
     local fresh = false
     for _, item in ipairs(items) do
         if item.category == "holiday" and item.started and not seen[item.key .. "#started"] then
@@ -1852,6 +2108,8 @@ end
 
 local function HandleLogin()
     local items = ScanCalendar()
+    NoteScan(items)
+    RecordBestRolls()
     local seen = HolidayHeraldCharDB.seen
     local alerted = HolidayHeraldCharDB.alerted
 
@@ -2339,6 +2597,11 @@ local function BuildSettings()
     Checkbox("showTips", "Tips", "One helpful tip per holiday, with more on hover.")
     Checkbox("showClass", "Class lines", "Class-specific goodies, like hunter pets, labeled for everyone.")
     Checkbox("showSecrets", "Secrets", "Spoiler teasers that reveal on hover.")
+    Checkbox("showPins", "Map pins (HandyNotes)",
+        "With HandyNotes installed, show holiday spots on your map, like event hubs and vendors, while the holiday is on.")
+    if Settings.SetOnValueChangedCallback then
+        Settings.SetOnValueChangedCallback("HolidayHerald_showPins", function() HH.RefreshPins() end)
+    end
 
     Header("Alerts")
     do
@@ -2404,11 +2667,14 @@ events:SetScript("OnEvent", function(self, event, arg1)
 
     elseif event == "PLAYER_LOGIN" then
         CreateMinimapButton()
+        RegisterHandyNotes()
         self:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
         self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
         self:RegisterEvent("ITEM_DATA_LOAD_RESULT")
         self:RegisterEvent("LFG_UPDATE_RANDOM_INFO")
+        self:RegisterEvent("LFG_COMPLETION_REWARD")
         self:RegisterEvent("ACHIEVEMENT_EARNED")
+        self:RegisterEvent("BAG_UPDATE_DELAYED")
         RequestAllItems()
         if RequestLFDPlayerLockInfo then RequestLFDPlayerLockInfo() end
         C_Calendar.OpenCalendar()
@@ -2422,15 +2688,24 @@ events:SetScript("OnEvent", function(self, event, arg1)
             if not loginDone then
                 loginDone = true
                 HandleLogin()
-                C_Timer.NewTicker(60, CheckForNewStarts)
+                SaveActiveCurrencies()
+                ScheduleNextCheck()
             end
         end)
+
+    elseif event == "BAG_UPDATE_DELAYED" then
+        -- Cheap: only re-counts the currency of holidays that are on now
+        if loginDone then SaveActiveCurrencies() end
 
     elseif event == "ACHIEVEMENT_EARNED" then
         CelebrateAchievement(arg1)
         QueueRedraw()
 
-    elseif event == "GET_ITEM_INFO_RECEIVED" or event == "ITEM_DATA_LOAD_RESULT" or event == "LFG_UPDATE_RANDOM_INFO" then
+    elseif event == "LFG_UPDATE_RANDOM_INFO" or event == "LFG_COMPLETION_REWARD" then
+        RecordBestRolls()
+        QueueRedraw()
+
+    elseif event == "GET_ITEM_INFO_RECEIVED" or event == "ITEM_DATA_LOAD_RESULT" then
         QueueRedraw()
     end
 end)

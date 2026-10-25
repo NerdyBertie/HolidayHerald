@@ -5,6 +5,7 @@
 ## Category: NerdyBertie
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\HolidayHerald\Media\icon
+## OptionalDeps: HandyNotes, TomTom
 ## SavedVariables: HolidayHeraldDB
 ## SavedVariablesPerCharacter: HolidayHeraldCharDB
 ## AddonCompartmentFunc: HolidayHerald_OnAddonCompartmentClick

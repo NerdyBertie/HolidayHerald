@@ -27,17 +27,17 @@ HH.Holidays.HallowsEnd = {
         { quest = 29054, faction = "Alliance", group = "Stormwind", name = "Stink Bombs Away!", giver = "Gretchen Fenlow" },
         { quest = 29144, faction = "Alliance", group = "Stormwind", name = "Clean Up in Stormwind", giver = "Gretchen Fenlow" },
         { quest = 29075, faction = "Alliance", group = "Stormwind", name = "A Time to Gain", giver = "Celestine of the Harvest", where = "At the Wickerman bonfire." },
-        { quest = 29371, faction = "Alliance", group = "Stormwind", name = "A Time to Lose", giver = "Keira", where = "Douse the Horde's Wickerman." },
+        { quest = 29371, faction = "Alliance", group = "Stormwind", name = "A Time to Lose", giver = "Keira", where = "Douse the Horde's Wickerman in Tirisfal. It's in the old Undercity, so talk to Zidormi (69.4, 62.8) first." },
         { quest = 29374, faction = "Horde", group = "Undercity", name = "Stink Bombs Away!", giver = "Candace Fenlow" },
         { quest = 29375, faction = "Horde", group = "Undercity", name = "Clean Up in Undercity", giver = "Candace Fenlow" },
         { quest = 29376, faction = "Horde", group = "Undercity", name = "A Time to Build Up", giver = "Darkcaller Yanka", where = "At the Wickerman bonfire." },
-        { quest = 29377, faction = "Horde", group = "Undercity", name = "A Time to Break Down", giver = "Darkcaller Yanka", where = "Douse the Alliance's Wickerman." },
+        { quest = 29377, faction = "Horde", group = "Undercity", name = "A Time to Break Down", giver = "Darkcaller Yanka", where = "Douse the Alliance's Wickerman, just outside Stormwind's gates in Elwynn Forest (33.7, 48.5)." },
 
         -- "Let the Fires Come!" starts the attack; "Stop the Fires!" is taken mid-attack. Either one counts.
         { quests = { 12135, 11131 }, faction = "Alliance", group = "Village fires", name = "Let the Fires Come!",
           giver = "Costumed Orphan Matron", where = "Goldshire, Kharanos, or Azure Watch. Any one town, once a day." },
         { quests = { 12139, 11219 }, faction = "Horde", group = "Village fires", name = "Let the Fires Come!",
-          giver = "Masked Orphan Matron", where = "Razor Hill, Brill, or Eversong Woods. Any one town, once a day." },
+          giver = "Masked Orphan Matron", where = "Razor Hill, Brill, or Falconwing Square (Burning Crusade Eversong, through Zidormi in Eastern Plaguelands). Any one town, once a day." },
 
         -- Neighborhood (player housing) dailies, new in Midnight. IDs from the quest log (verified Oct 2026).
         { quest = 93400, group = "Your neighborhood", name = "Sugar Run", giver = "Yin Shuilan",
@@ -77,6 +77,100 @@ HH.Holidays.HallowsEnd = {
                .. "10 Neighborhood Candy gets you experience, 2 Tricky Treats, and 3 more Neighborhood Candy." },
     },
 
+    -- HandyNotes map pins (only shown with HandyNotes installed, while Hallow's End is on).
+    -- Spots from Roberta in game, Oct 2026. Secrets (like Pepe) stay off the map on purpose.
+    pins = {
+        -- Neighborhoods
+        { map = 2352, x = 53.9, y = 33.8, title = "Hallow's End neighborhood hub",
+          note = {
+              { "Alaric Duskwick", "Broomstick Express, Specter Inspector" },
+              { "Yin Shuilan", "Sugar Run" },
+              "The portal to Nomi (Candy Crafting) is right next to Yin.",
+              "The Tricky Treat Trader swaps Neighborhood Candy for Tricky Treats.",
+              "There's a portal to Stormwind for the city festival, too.",
+          } },
+        { map = 2352, x = 54.3, y = 32.7, title = "Hallow's End decor vendors",
+          note = "Cordula Wolfgang and Holly Twinklebright sell Hallow's End decor for gold and Tricky Treats." },
+        { map = 2351, x = 51.8, y = 54.2, title = "Hallow's End neighborhood hub",
+          note = {
+              { "Nargok Ghostcleaver", "Broomstick Express, Specter Inspector" },
+              { "Yin Shuilan", "Sugar Run" },
+              "The portal to Nomi (Candy Crafting) is right next to Yin.",
+              "The Tricky Treat Trader swaps Neighborhood Candy for Tricky Treats.",
+              "There's a portal to Undercity too, but talk to Zidormi in Tirisfal Glades first, or the plague will get you!",
+          } },
+        { map = 2351, x = 52.4, y = 54.4, title = "Hallow's End decor vendors",
+          note = "Spew Gutsout and Jolli Maxiboom, in the hut by the hub, sell Hallow's End decor for gold and Tricky Treats." },
+
+        -- City festivals
+        { map = 37, x = 32.4, y = 50.3, faction = "Alliance", title = "Hallow's End festival",
+          note = {
+              "The Wickerman bonfire, just outside Stormwind's gates.",
+              { "Gretchen Fenlow", "Stink Bombs Away!, Clean Up in Stormwind" },
+              { "Celestine of the Harvest", "A Time to Gain" },
+              { "Keira", "A Time to Lose" },
+              "Jack sells decor, and Dorothy and Pippi sell costumes, toys, and pets.",
+              "Every 4 hours, Genn Greymane has the Wickerman burned, and everyone nearby gets Greymane's Resolve for an hour.",
+          } },
+        { map = 18, x = 62.2, y = 66.6, faction = "Horde", title = "Hallow's End festival",
+          note = {
+              "Outside Undercity. Talk to Zidormi (69.4, 62.8) first to see the old Undercity.",
+              { "Candace Fenlow", "Stink Bombs Away!, Clean Up in Undercity" },
+              { "Darkcaller Yanka (62.1, 67.8)", "A Time to Build Up, A Time to Break Down" },
+              "Echo sells decor, and Chub and Woim sell costumes, toys, and pets.",
+              "Every 4 hours, Sylvanas (62.4, 67.6) has the Wickerman burned, and everyone nearby gets Decree of the Dark Lady for an hour.",
+          } },
+        { map = 18, x = 69.4, y = 62.8, faction = "Horde", warning = true, title = "Zidormi: talk to her first!", icon = "Interface\\Icons\\INV_Misc_Head_Dragon_Bronze",
+          note = {
+              "In the present day, Undercity is full of deadly plague.",
+              "Zidormi sends you back to the old Undercity, where the Hallow's End festival is. It stays that way for this character until you ask her to switch back.",
+          } },
+        { map = 18, x = 62.3, y = 68.0, faction = "Alliance", title = "The Horde's Wickerman",
+          note = {
+              { "A Time to Lose", "from Keira at Stormwind's Wickerman" },
+              "Use her Dousing Agent here to put out the Horde's Wickerman. It's in the old Undercity, so talk to Zidormi (69.4, 62.8) first.",
+          } },
+        { map = 37, x = 33.7, y = 48.5, faction = "Horde", title = "The Alliance's Wickerman",
+          note = {
+              { "A Time to Break Down", "from Darkcaller Yanka in Undercity" },
+              "Use her Dousing Agent here to put out the Alliance's Wickerman, just outside Stormwind's gates. This spot is a little behind it, so you're less likely to pull the guards.",
+          } },
+        { map = 18, x = 69.4, y = 62.8, faction = "Alliance", title = "Zidormi (old Undercity)", icon = "Interface\\Icons\\INV_Misc_Head_Dragon_Bronze",
+          note = "The Horde's Wickerman is in the old Undercity, before the plague. Ask Zidormi to take you back to see it. It stays that way for this character until you ask her to switch back." },
+
+        -- Shade of the Horseman fires (Orphan Matrons)
+        { faction = "Alliance", map = 37, x = 42.6, y = 64.3, title = "Goldshire fires",
+          note = "Take Let the Fires Come! from the Costumed Orphan Matron here. Accepting it starts the Shade of the Horseman's attack on Goldshire. Once a day, in any one town." },
+        { faction = "Alliance", map = 27, x = 53.3, y = 51.4, title = "Kharanos fires",
+          note = "Take Let the Fires Come! from the Costumed Orphan Matron here. Accepting it starts the Shade of the Horseman's attack on Kharanos. Once a day, in any one town." },
+        { faction = "Alliance", map = 97, x = 49.2, y = 51.3, title = "Azure Watch fires",
+          note = "Take Let the Fires Come! from the Costumed Orphan Matron here. Accepting it starts the Shade of the Horseman's attack on Azure Watch. Once a day, in any one town." },
+        { faction = "Horde", map = 1, x = 52.6, y = 41.2, title = "Razor Hill fires",
+          note = "Take Let the Fires Come! from the Masked Orphan Matron here. Accepting it starts the Shade of the Horseman's attack on Razor Hill. Once a day, in any one town." },
+        { faction = "Horde", map = 18, x = 60.9, y = 53.5, title = "Brill fires",
+          note = "Take Let the Fires Come! from the Masked Orphan Matron here. Accepting it starts the Shade of the Horseman's attack on Brill. Once a day, in any one town." },
+        { faction = "Horde", map = 94, x = 47.2, y = 46.5, title = "Falconwing Square fires (old Eversong)", noContinent = true,
+          note = {
+              "Take Let the Fires Come! from the Masked Orphan Matron here. Accepting it starts the Shade of the Horseman's attack on Falconwing Square. Once a day, in any one town.",
+              " ",
+              "This is the Burning Crusade Eversong Woods. To get there, talk to Zidormi at Thalassian Pass in Eastern Plaguelands (53.9, 8.6).",
+          } },
+        { faction = "Horde", map = 23, x = 53.9, y = 8.6, title = "Zidormi (old Eversong)", icon = "Interface\\Icons\\INV_Misc_Head_Dragon_Bronze",
+          note = "Ask her to show you Eversong Woods and Ghostlands as they were in the Burning Crusade. That's where the Falconwing Square fires are." },
+
+        -- Elsewhere
+        { map = 2393, x = 51.2, y = 76.4, title = "Holiday Enthusiast",
+          note = {
+              "#Start here",
+              "Among the pumpkins near the Trading Post. He has three lead-in quests:",
+              { "A Season for Celebration", "the Wickerman quests" },
+              { "Costumed Orphan Matron", "the village fires" },
+              { "A Haunted Home", "your neighborhood" },
+          } },
+        { map = 641, x = 35.0, y = 56.0, title = "Under the Crooked Tree",
+          note = "Daily: defeat the Hag of the Crooked Tree in Bradensbrook for Tricky Treats and a small chance at a witch hat. Level 40 or higher." },
+    },
+
     -- Holiday currency: entries with price = N add up into "Tricky Treats for the rest"
     currency = { item = 33226, name = "Tricky Treats",
         note = "Counts one of each thing you don't have yet. Prices from Chub and Woim (Oct 2026)." },
@@ -108,7 +202,24 @@ HH.Holidays.HallowsEnd = {
               "#Missed it?",
               "If the fires win, the quest stays in your log. Turn it in the next time a town is saved, at any of your faction's Matrons.",
           } },
-        { faction = "Horde", short = "Save Razor Hill, Brill, or Eversong Woods from the Shade of the Horseman's fires once a day.",
+        { faction = "Horde", warning = true, short = "Before taking your neighborhood's portal to Undercity, talk to Zidormi, or the plague will get you!",
+          title = "Undercity and Zidormi",
+          hover = {
+              "The portal to Undercity in your neighborhood hub drops you into today's ruins, which are full of deadly plague.",
+              "Talk to Zidormi, the bronze dragon just outside the Ruins of Lordaeron in Tirisfal Glades (69.4, 62.8), first. She sends you back in time to the old Undercity, where the Hallow's End festivities are.",
+              "It stays that way for that character until you ask her to bring you back to the present.",
+              " ",
+              "There's a portal back to your neighborhood there too.",
+              "Heads up: if you have houses in more than one neighborhood, the portals can sometimes drop you in a different one than you meant. Teleport to Plot lets you pick which house you go to.",
+          } },
+        { faction = "Alliance", short = "Your neighborhood's holiday hub has a portal to Stormwind for the Wickerman festival, and there's one back when you're done.",
+          title = "Neighborhood portals",
+          hover = {
+              "The holiday hub in your neighborhood has a portal straight to Stormwind, and there's a portal back to the neighborhood there.",
+              " ",
+              "Heads up: if you have houses in more than one neighborhood, the portals can sometimes drop you in a different one than you meant. Teleport to Plot lets you pick which house you go to.",
+          } },
+        { faction = "Horde", short = "Save Razor Hill, Brill, or Falconwing Square from the Shade of the Horseman's fires once a day.",
           title = "Let the Fires Come!",
           hover = {
               "#How it works",
@@ -118,6 +229,9 @@ HH.Holidays.HallowsEnd = {
               " ",
               "#Missed it?",
               "If the fires win, the quest stays in your log. Turn it in the next time a town is saved, at any of your faction's Matrons.",
+              " ",
+              "#Falconwing Square",
+              "Its fires are in the Burning Crusade Eversong Woods, not the Midnight one. Talk to Zidormi at Thalassian Pass in Eastern Plaguelands (53.9, 8.6) to go there.",
           } },
     },
 
@@ -227,7 +341,7 @@ HH.Holidays.HallowsEnd = {
         { achievement = 10365, group = "Achievement reward", name = "Scarecrow Pepe", cost = "A Frightening Friend",
           note = "Talk to Pepe in a level 3 garrison during Hallow's End to unlock A Tiny Scarecrow Costume." },
     },
-    decorNote = "Where to buy: the gold and Tricky Treat pieces and the recipes are sold by Echo (Tirisfal Glades), Jack (Elwynn Forest), Spew Gutsout (Razorwind Shores), and Cordula Wolfgang (Founder's Point).",
+    decorNote = "Where to buy: the gold and Tricky Treat pieces and the recipes are sold by Echo (Tirisfal Glades), Jack (Elwynn Forest), Spew Gutsout and Jolli Maxiboom (in a hut by the holiday hub in Razorwind Shores, 52.4, 54.4), and Cordula Wolfgang and Holly Twinklebright (by the holiday hub in Founder's Point, 54.3, 32.7).",
 
     -- Ensembles are checked from their tooltip ("Already known")
     reminders = {
@@ -245,10 +359,10 @@ HH.Holidays.HallowsEnd = {
             " ",
             "#Wickerman buffs (outside Stormwind and Undercity)",
             "Click the glowing ashes by the Wickerman for +10% XP and reputation for 2 hours. It drops if you die, but you can grab it again right away.",
-            "Every 4 hours, Genn Greymane or Sylvanas watches the Wickerman burn and gives everyone nearby an hour-long buff.",
+            "Every 4 hours, Genn Greymane or Sylvanas gives a speech while their mages set the Wickerman ablaze, and everyone nearby gets an hour-long buff: Greymane's Resolve (Alliance) or Decree of the Dark Lady (Horde). Both give mastery and stamina that scale with your level and stay through death. It counts as both a battle and guardian elixir, so it won't replace an elixir or flask you already have on. Cancel yours before the speech ends if you want the buff.",
             " ",
-            "#Shade of the Horseman",
-            "Every half hour he attacks Goldshire, Kharanos, and Azure Watch (Alliance) or Razor Hill, Falconwing Square, and Brill (Horde). Help put out the fires for a gift that can hold candy, masks, or even a broom.",
+            "#Shade of the Horseman (town fires)",
+            "He attacks Goldshire, Kharanos, and Azure Watch (Alliance) or Razor Hill, Falconwing Square, and Brill (Horde) whenever someone takes Let the Fires Come! from the Orphan Matron there. Help put out the fires for a gift that can hold candy, masks, or even a broom.",
             " ",
             "#Save your treats",
             "Wait until the last few days to shop: the Horseman's pumpkin can drop some vendor items for free.",
@@ -301,12 +415,12 @@ HH.Holidays.HallowsEnd = {
         {
             teaser = "Secret: a glowing portal waits in your neighborhood...",
             reveal = "Catch ghosts with the Ghost Gear and drop them in the Ghost Tank. When the neighborhood fills "
-                  .. "the tank, the Shade of Seabreaker Skoloth appears in the Holiday Hub. Click him to keep the "
+                  .. "the tank, the Shade of Seabreaker Skoloth appears in the Holiday Hub (a different ghost from the Shade of the Horseman in the town fires). Click him to keep the "
                   .. "Ghost Gear beam on him, get close, and press the flexing-arm extra action button to yank him "
                   .. "forward. Keep doing it until he's in the glowing portal circle. He doesn't fight back, but watch "
                   .. "the ground: purple swirls fear you and watery circles knock you back. More neighbors make it "
                   .. "quicker. The portal opens a chest of Tricky Treats and Neighborhood Candy. The Headless Horseman "
-                  .. "himself sometimes shows up and summons another Shade.",
+                  .. "himself sometimes shows up and summons another Skoloth.",
         },
         {
             teaser = "Secret: some candy buckets hide in the past...",
