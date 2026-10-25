@@ -5,3 +5,4 @@ manual-changelog:
   markup-type: markdown
 optional-dependencies:
   - tomtom
+  - handynotes
