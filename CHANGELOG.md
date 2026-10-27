@@ -1,5 +1,20 @@
 # Holiday Herald
 
+## v1.6.10
+
+### New
+- Hallow's End (Americas realms): a countdown to the next Wickerman speech (Genn Greymane or Sylvanas), so you can be there for the buff.
+- Short-holiday reminders are calmer: until the day before, they're a quiet chat line with a link. The full alert with sound comes the day before and the day of. They can also be turned off now.
+
+### Fixes
+- The "Alerts and sounds" setting now only changes alerts and sounds. Before, picking a preset also turned tips, secrets, map pins and other display settings back on.
+- If a holiday starts while you're playing, you now get an on-screen heads-up and a chat line with a link to open it, with a soft chime (handy if you're alt-tabbed), instead of the full popup jumping up mid-game. One-day holidays still get their louder alert, and micro-holidays their chat line, right when they start (before, those only came at your next login).
+- Timed events like the Candy Crawl use the server's clock, so they're right in every time zone.
+- If the in-game calendar is slow to answer at login, Holiday Herald carries on anyway after a few seconds instead of staying quiet all session.
+- Holiday Herald no longer flips your open calendar back to this month when it checks for holidays.
+- The chat messages wear the colors of the holiday that's on now, instead of the next one coming up.
+- A little faster: each holiday's achievement list is looked up once per session, and collections are only counted once per redraw.
+
 ## v1.6.9
 
 ### New

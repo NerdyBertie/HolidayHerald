@@ -75,6 +75,20 @@ HH.Holidays.HallowsEnd = {
         { quest = 98801, name = "Community Candy Crawl", startMinute = 0, length = 15,
           where = "A neighborhood world quest in Founder's Point and Razorwind Shores. Loot the candy buckets outside occupied plots. "
                .. "10 Neighborhood Candy gets you experience, 2 Tricky Treats, and 3 more Neighborhood Candy." },
+        -- Genn's speech: every 4 hours on US Pacific time (12, 4, 8 AM/PM), about 10 minutes after
+        -- Celestine's warning. Seen by Roberta Oct 27 (warning just before 6 AM Central = 4 AM Pacific).
+        -- Americas region only.
+        { name = "Wickerman speech", faction = "Alliance", region = 1, clock = "pacific",
+          every = 240, startMinute = 10, length = 2,
+          runs = "Every 4 hours, Celestine of the Harvest gives a 10-minute warning, then Genn Greymane gives his speech. "
+              .. "Stand in front of the Wickerman when it ends for Greymane's Resolve. Cancel any elixirs or flasks first, or you won't get it.",
+          where = "Just outside Stormwind's gates in Elwynn Forest (32.4, 50.3)." },
+        -- Same schedule for the Horde (Warcraft wiki: one shared cycle; Darkcaller Yanka gives the warning)
+        { name = "Wickerman speech", faction = "Horde", region = 1, clock = "pacific",
+          every = 240, startMinute = 10, length = 2,
+          runs = "Every 4 hours, Darkcaller Yanka gives a 10-minute warning, then Sylvanas gives her speech. "
+              .. "Stand in front of the Wickerman when it ends for Decree of the Dark Lady. Cancel any elixirs or flasks first, or you won't get it.",
+          where = "By the Wickerman outside the old Undercity in Tirisfal Glades (62.3, 68.0). Talk to Zidormi (69.4, 62.8) first." },
     },
 
     -- HandyNotes map pins (only shown with HandyNotes installed, while Hallow's End is on).

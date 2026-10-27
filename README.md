@@ -17,7 +17,7 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Housing decor shopping list.** Every piece of a holiday's decor in one hover, grouped by what it costs, with where to buy it. Pieces you already have turn gray.
 - **Holiday currency totals.** See how many Tricky Treats (and more to come) you'd need for one of everything you're still missing, next to how many your whole account has: every character's bags and banks plus the warband bank. Hover to see who has how many.
 - **Map pins.** With HandyNotes installed, holiday spots show on your zone and continent maps while the holiday is on: event hubs, vendors, quest towns, and anyone you need to talk to first. Hover a pin for details, and with TomTom installed, click it for a waypoint. Turn them off in the settings.
-- **Event timers.** Hourly events, like Hallow's End's Community Candy Crawl in your neighborhood, show whether they're on now or how long until the next one.
+- **Event timers.** Repeating events, like Hallow's End's Community Candy Crawl in your neighborhood and the Wickerman speech that gives the buff, show whether they're on now or how long until the next one.
 - **Always-current achievements.** Each holiday's achievement list is read straight from the game, so brand new achievements show up on their own. Hover to see only what you still need.
 - **Holiday boss info.** See every drop at a glance, plus whether your account's best daily roll is still available and whether this character has done the boss today. Click the boss line to open the Dungeon Finder with the holiday dungeon already picked. Just hit Find Group! And if you're still missing the boss's mount, you get a little "good luck!" too.
 - **Clickable achievements.** Click any achievement line to open it, or shift-click to link it in chat. Meta lines jump straight to the holiday's part of _What a Long, Strange Trip It's Been_ (Violet Proto-Drake).
@@ -27,7 +27,7 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Secrets!** Spoiler teasers that only reveal when you hover. Hidden pets, sneaky toys, and more.
 - **Fold-up sections.** Already read the tips and secrets? Click the heading to fold them away. Each holiday's sections get their own colors from its theme.
 - **Class goodies.** Lines like "Hunters: tame the Pink Elekk!" are shown to everyone, so you won't miss something for your alts.
-- **Short-holiday alerts.** One-day holidays get a loud on-screen alert, so they can't slip by.
+- **Short-holiday alerts.** Short holidays get a quiet chat reminder as they get close, then a loud on-screen alert the day before and the day of, so they can't slip by. Pick how early the reminders start, or turn them off.
 - **Stays quiet.** A full popup when a holiday first shows up and again on the day it starts, then just a chat line after that. Click the chat link, or type `/herald` at any time to see the popup.
 - **Micro-holidays.** Little holidays like The Great Gnomeregan Run get a chat line on the day and their own card.
 - **Weekly events.** PvP Brawls, bonus events, and Timewalking (with its expansion) listed in their own section.

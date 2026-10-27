@@ -11,7 +11,7 @@ HH.Holidays = HH.Holidays or {}
 local DB_DEFAULTS = {
     showPopup    = true,   -- full popup once per character per holiday
     lookahead    = 7,      -- days ahead to list holidays
-    alertDays    = 0,      -- short-holiday alert: 0 = day of only
+    alertDays    = 0,      -- short-holiday alert: -1 = off, 0 = day of only, 1/3/7 = start that many days before
     alertMessage = true,
     alertSound   = true,
     toast        = true,
@@ -35,6 +35,7 @@ local FANFARE_SOUND_ID     = 888    -- level-up fanfare (VERIFY sound choice)
 local BIG_FANFARE_SOUND_ID = 888    -- for the Violet Proto-Drake (VERIFY sound choice)
 local SHORT_HOLIDAY_HOURS = 72
 local ALERT_SOUND_ID      = 8959       -- raid warning
+local START_SOUND_ID      = (SOUNDKIT and SOUNDKIT.ALARM_CLOCK_WARNING_3) or 12889   -- soft calendar chime
 local POPUP_WIDTH         = 400
 local GRAY                = "8A8477"
 local SOFT                = "B7AE9C"
@@ -261,7 +262,18 @@ end
 -- World Events subcategory whose name matches the holiday ("Feast of Winter Veil"
 -- matches "Winter Veil"). Holidays without their own subcategory return nil.
 local WORLD_EVENTS = 155
+local categoryCache = {}   -- [data] = categoryID or false (the category list doesn't change in a session)
+local FindHolidayCategory
 local function HolidayCategoryID(data)
+    if categoryCache[data] == nil then
+        local found = FindHolidayCategory(data)
+        -- Only remember "none" once the game has actually loaded its category list
+        if found or #(GetCategoryList() or {}) > 0 then categoryCache[data] = found or false end
+        return found
+    end
+    return categoryCache[data] or nil
+end
+FindHolidayCategory = function(data)
     local best, bestLength
     local holidayName = (data.name or ""):lower()
     for _, categoryID in ipairs(GetCategoryList() or {}) do
@@ -540,6 +552,7 @@ end
 ---------------------------------------------------------------------------
 local function ScanCalendar()
     local today = C_DateAndTime.GetCurrentCalendarTime()
+    local shown = C_Calendar.GetMonthInfo and C_Calendar.GetMonthInfo(0)
     C_Calendar.SetAbsMonth(today.month, today.year)
 
     local seen, items = {}, {}
@@ -589,8 +602,8 @@ local function ScanCalendar()
     end
 
     -- Pick whose colors the chat prefix wears, in this order:
-    -- the next big holiday coming up, then the next micro-holiday coming up,
-    -- then a big holiday that's on now, then a micro-holiday that's on now
+    -- a big holiday that's on now, then the next big holiday coming up,
+    -- then a micro-holiday that's on now, then the next micro-holiday coming up
     local nextBig, nextMicro, nowBig, nowMicro
     local function Sooner(a, b) return not b or (a.startEpoch or 0) < (b.startEpoch or 0) end
     for _, item in ipairs(items) do
@@ -605,8 +618,12 @@ local function ScanCalendar()
             end
         end
     end
-    local pick = nextBig or nextMicro or nowBig or nowMicro
+    local pick = nowBig or nextBig or nowMicro or nextMicro
     chatTheme = (HolidayHeraldDB.showThemes and pick) and pick.data.colors or nil
+    -- If the player had the calendar on another month, put it back
+    if shown and shown.month and (shown.month ~= today.month or shown.year ~= today.year) then
+        C_Calendar.SetAbsMonth(shown.month, shown.year)
+    end
     return items
 end
 
@@ -798,9 +815,9 @@ local function AchievementClick(id, linkID)
 end
 
 -- Returns a count line spec, and whether that category is finished
-local function CountLine(holidayName, field, list, colors, data)
+local function CountLine(holidayName, field, list, colors, data, owned, total, reminders)
     local info = COUNT_LABELS[field]
-    local owned, total, reminders = CountOwned(list)
+    if not owned then owned, total, reminders = CountOwned(list) end
     local right, done
     if total == 0 then
         right = reminders .. " " .. (reminders == 1 and (info.unit or "item") or (info.units or "items"))
@@ -893,6 +910,37 @@ local function AccountCurrency(itemID)
     return total, rows
 end
 HH.SaveCurrencyCount = SaveCurrencyCount
+
+-- "45 min" or "2h 15m"
+local function MinutesText(mins)
+    if mins < 60 then return mins .. " min" end
+    return ("%dh %02dm"):format(math.floor(mins / 60), mins % 60)
+end
+
+-- Minutes to add to UTC to get US Pacific time (-480 standard, -420 daylight).
+-- Daylight time: 2nd Sunday of March 10:00 UTC to 1st Sunday of November 09:00 UTC.
+local function PacificOffsetMinutes(t)
+    local y = tonumber(date("!%Y", t))
+    local function Weekday(year, month, day)   -- 0 = Sunday
+        local k = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 }
+        if month < 3 then year = year - 1 end
+        return (year + math.floor(year / 4) - math.floor(year / 100) + math.floor(year / 400) + k[month] + day) % 7
+    end
+    local function DaysFromCivil(year, month, day)   -- days since 1970-01-01
+        if month <= 2 then year = year - 1 end
+        local era = math.floor(year / 400)
+        local yoe = year - era * 400
+        local mp = (month + 9) % 12
+        local doy = math.floor((153 * mp + 2) / 5) + day - 1
+        local doe = yoe * 365 + math.floor(yoe / 4) - math.floor(yoe / 100) + doy
+        return era * 146097 + doe - 719468
+    end
+    local marchSun = 8 + (7 - Weekday(y, 3, 8)) % 7    -- 2nd Sunday of March
+    local novSun   = 1 + (7 - Weekday(y, 11, 1)) % 7   -- 1st Sunday of November
+    local dstStart = DaysFromCivil(y, 3, marchSun) * 86400 + 10 * 3600
+    local dstEnd   = DaysFromCivil(y, 11, novSun) * 86400 + 9 * 3600
+    return (t >= dstStart and t < dstEnd) and -420 or -480
+end
 
 local function BuildLines(item)
     local data = item.data
@@ -1061,24 +1109,28 @@ local function BuildLines(item)
     -- Asks the game for the time left; away from the zone it works it out from the clock.
     for _, ev in ipairs(data.timedEvents or {}) do
         local active = (item.daysAway == 0 and item.started ~= false)
-        if active and ForMyFaction(ev) then
-            local left = C_TaskQuest and C_TaskQuest.GetQuestTimeLeftMinutes and C_TaskQuest.GetQuestTimeLeftMinutes(ev.quest)
-            local into = (tonumber(date("%M")) - (ev.startMinute or 0)) % 60
+        local rightRegion = not ev.region or (GetCurrentRegion and GetCurrentRegion() == ev.region)
+        if active and rightRegion and ForMyFaction(ev) then
+            local left = ev.quest and C_TaskQuest and C_TaskQuest.GetQuestTimeLeftMinutes and C_TaskQuest.GetQuestTimeLeftMinutes(ev.quest)
+            local every = ev.every or 60
+            local nowMin = math.floor(GetServerTime() / 60)
+            if ev.clock == "pacific" then nowMin = nowMin + PacificOffsetMinutes(GetServerTime()) end
+            local into = (nowMin - (ev.startMinute or 0)) % every
             local on, mins
             if left and left > 0 then
                 on, mins = true, left
             elseif into < ev.length then
                 on, mins = true, ev.length - into
             else
-                on, mins = false, 60 - into
+                on, mins = false, every - into
             end
             toGet[#toGet + 1] = {
                 icon = ICONS.reset,
                 text = ev.name,
-                right = on and Color(colors.main, "on now, " .. mins .. " min left") or Color(SOFT, "in " .. mins .. " min"),
+                right = on and Color(colors.main, "on now, " .. MinutesText(mins) .. " left") or Color(SOFT, "in " .. MinutesText(mins)),
                 tooltip = function(tt)
                     tt:AddLine(ev.name, Hex(colors.main))
-                    tt:AddLine(("Runs for %d minutes at the start of every hour."):format(ev.length), 1, 1, 1, true)
+                    tt:AddLine(ev.runs or ("Runs for %d minutes at the start of every hour."):format(ev.length), 1, 1, 1, true)
                     if ev.where then tt:AddLine(ev.where, 0.72, 0.68, 0.61, true) end
                 end,
             }
@@ -1088,14 +1140,14 @@ local function BuildLines(item)
     -- Collection counts: unfinished ones listed, finished ones folded into "Done"
     for _, field in ipairs(COUNT_ORDER) do
         local list = (field == "achievements") and HolidayAchievements(data) or data[field]
-        local _, total, reminders = 0, 0, 0
+        local owned, total, reminders = 0, 0, 0
         if list and #list > 0 then
-            _, total, reminders = CountOwned(list)
+            owned, total, reminders = CountOwned(list)
         end
         -- skip lists where nothing applies to this character (race/faction-only items)
         if total + reminders > 0 then
             hasGoals = true
-            local spec, isDone = CountLine(name, field, list, colors, data)
+            local spec, isDone = CountLine(name, field, list, colors, data, owned, total, reminders)
             if isDone then
                 done[#done + 1] = spec.doneLabel
                 doneTooltips[#doneTooltips + 1] = spec
@@ -1862,7 +1914,7 @@ local OPEN_LINK = "|Haddon:HolidayHerald:open|h" .. Color(DEFAULT_COLORS.main, "
 
 local function ShortAlert(item)
     local name = (item.data and item.data.name) or item.title
-    local msg = name .. (item.daysAway == 0 and " is TODAY ONLY!" or (" starts in " .. item.daysAway .. " day(s)!"))
+    local msg = name .. (item.daysAway == 0 and " is TODAY ONLY!" or (" starts in " .. item.daysAway .. (item.daysAway == 1 and " day!" or " days!")))
     if item.data then
         local wants = {}
         for _, field in ipairs({ "toys", "reminders" }) do
@@ -1874,6 +1926,13 @@ local function ShortAlert(item)
             end
         end
         if #wants > 0 then msg = msg .. " Don't miss: " .. table.concat(wants, ", ") .. "!" end
+    end
+    -- More than a day out: just a quiet chat line, the noise comes closer to the day
+    if (item.daysAway or 0) > 1 then
+        local themed = name
+        if item.data and item.data.colors and HolidayHeraldDB.showThemes then themed = ThemedText(name, item.data.colors) end
+        Print(themed .. msg:sub(#name + 1) .. " " .. OPEN_LINK)
+        return
     end
     if HolidayHeraldDB.alertMessage then
         RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
@@ -2067,6 +2126,8 @@ end
 local SAFETY_CHECK = 6 * 3600
 local wakeTimer
 local CheckForNewStarts
+local DayAlerts
+local StartNotice
 
 local function ScheduleNextCheck(delay)
     if wakeTimer then wakeTimer:Cancel() end
@@ -2080,9 +2141,23 @@ local function ScheduleNextCheck(delay)
     wakeTimer = C_Timer.NewTimer(math.max(5, delay), function() CheckForNewStarts() end)
 end
 
+-- "Hallow's End has started!" at the top of the screen, plus a chat line with a link
+StartNotice = function(item)
+    local name = (item.data and item.data.name) or item.title
+    if HolidayHeraldDB.alertMessage then
+        RaidNotice_AddMessage(RaidWarningFrame, name .. " has started!", ChatTypeInfo["RAID_WARNING"])
+    end
+    -- A soft ding (the calendar's own event-reminder chime), so you hear it while alt-tabbed
+    if HolidayHeraldDB.alertSound then PlaySound(START_SOUND_ID) end
+    if item.data and item.data.colors and HolidayHeraldDB.showThemes then
+        name = ThemedText(name, item.data.colors)
+    end
+    Print(name .. " has started! " .. OPEN_LINK)
+end
+
 CheckForNewStarts = function()
     -- Busy? Try again in a minute
-    if InCombatLockdown() or popup:IsShown() then
+    if InCombatLockdown() then
         ScheduleNextCheck(60)
         return
     end
@@ -2091,19 +2166,19 @@ CheckForNewStarts = function()
     NoteScan(items)
     RecordBestRolls()
     ScheduleNextCheck()
-    if not (HolidayHeraldDB.showPopup and HolidayHeraldDB.popupOnStart) then return end
-    local fresh = false
+    DayAlerts(items)
+    -- A holiday started while you're playing: no big popup in your face, just a
+    -- raid-warning style heads-up and a chat line with a link to open it
     for _, item in ipairs(items) do
         if item.category == "holiday" and item.started and not seen[item.key .. "#started"] then
-            fresh = true
             seen[item.key] = true
             seen[item.key .. "#started"] = true
+            -- Short holidays already got their own (louder) alert from DayAlerts
+            local shortAlerted = item.isShort and HolidayHeraldDB.alertDays >= 0 and item.daysAway <= HolidayHeraldDB.alertDays
+            if not shortAlerted then StartNotice(item) end
         end
     end
-    if fresh then
-        Render(items)
-        popup:Show()
-    end
+    if popup:IsShown() then Render(items) end
 end
 
 local function HandleLogin()
@@ -2156,6 +2231,15 @@ local function HandleLogin()
         Print(table.concat(parts, " ") .. " " .. OPEN_LINK)
     end
 
+    DayAlerts(items)
+end
+
+-- Micro-holiday chat line and short-holiday alerts. Runs at login and whenever
+-- a holiday starts while you're playing; each one only fires once.
+DayAlerts = function(items)
+    local seen = HolidayHeraldCharDB.seen
+    local alerted = HolidayHeraldCharDB.alerted
+
     -- Micro-holidays: one chat line on the day
     for _, item in ipairs(items) do
         if HolidayHeraldDB.microChat and item.category == "micro" and item.daysAway == 0 and not seen[item.key] then
@@ -2171,7 +2255,7 @@ local function HandleLogin()
 
     -- Short-holiday alerts
     for _, item in ipairs(items) do
-        if item.category == "holiday" and item.isShort and item.daysAway <= HolidayHeraldDB.alertDays then
+        if item.category == "holiday" and item.isShort and HolidayHeraldDB.alertDays >= 0 and item.daysAway <= HolidayHeraldDB.alertDays then
             local alertKey = item.key .. "#" .. item.daysAway
             if not alerted[alertKey] then
                 ShortAlert(item)
@@ -2405,6 +2489,8 @@ local PRESETS = {
     visuals = { alertSound = false, fanfare = false },
     quiet   = { alertMessage = false, alertSound = false, toast = false, fanfare = false, microChat = false, achievementToast = false },
 }
+-- The presets only change these (how loud Holiday Herald is), never the display settings
+local PRESET_KEYS = { "alertMessage", "alertSound", "toast", "fanfare", "microChat", "achievementToast" }
 local settingObjects = {}
 local settingsCategory
 
@@ -2412,12 +2498,10 @@ local settingsCategory
 local function CurrentPreset()
     for _, name in ipairs({ "all", "visuals", "quiet" }) do
         local matches = true
-        for key, default in pairs(DB_DEFAULTS) do
-            if type(default) == "boolean" and key ~= "showMinimap" then
-                local expected = PRESETS[name][key]
-                if expected == nil then expected = true end
-                if HolidayHeraldDB[key] ~= expected then matches = false break end
-            end
+        for _, key in ipairs(PRESET_KEYS) do
+            local expected = PRESETS[name][key]
+            if expected == nil then expected = true end
+            if HolidayHeraldDB[key] ~= expected then matches = false break end
         end
         if matches then return name end
     end
@@ -2426,15 +2510,13 @@ end
 
 local function ApplyPreset(name)
     if not PRESETS[name] then return end
-    for key, default in pairs(DB_DEFAULTS) do
-        if type(default) == "boolean" and key ~= "showMinimap" then
-            local value = PRESETS[name][key]
-            if value == nil then value = true end
-            if settingObjects[key] then
-                settingObjects[key]:SetValue(value)
-            else
-                HolidayHeraldDB[key] = value
-            end
+    for _, key in ipairs(PRESET_KEYS) do
+        local value = PRESETS[name][key]
+        if value == nil then value = true end
+        if settingObjects[key] then
+            settingObjects[key]:SetValue(value)
+        else
+            HolidayHeraldDB[key] = value
         end
     end
 end
@@ -2550,7 +2632,7 @@ local function BuildSettings()
     Checkbox("showPopup", "Show popup for new holidays",
         "Show the full popup the first time each character sees a holiday. After that, it's a chat line.")
     Checkbox("popupOnStart", "Popup when a holiday starts",
-        "Show the popup again on the day a holiday begins, even if you saw it earlier in the week. If you're playing when it starts, it pops up then (after combat).")
+        "Show the popup again when you log in on the day a holiday begins, even if you saw it earlier in the week. If you're already playing when it starts, you get an on-screen heads-up and a chat link instead.")
     do
         local setting = Settings.RegisterAddOnSetting(category, "HolidayHerald_lookahead", "lookahead",
             HolidayHeraldDB, "number", "Look ahead (days)", DB_DEFAULTS.lookahead)
@@ -2610,6 +2692,7 @@ local function BuildSettings()
         settingObjects.alertDays = setting
         local function GetOptions()
             local container = Settings.CreateControlTextContainer()
+            container:Add(-1, "Off")
             container:Add(0, "Day of only")
             container:Add(1, "1 day before")
             container:Add(3, "3 days before")
@@ -2617,7 +2700,7 @@ local function BuildSettings()
             return container:GetData()
         end
         CreateDropdown(category, setting, GetOptions,
-            "When to fire the loud alert for one- or two-day holidays. The day-of alert always fires too.")
+            "When to start reminding you about short holidays (three days or less). Until the day before, it's a quiet chat line once a day; the day before and the day of, you get the full alert. Off turns these reminders off; the holiday still shows in the popup as usual.")
     end
     Checkbox("alertMessage", "On-screen alert", "Show short-holiday alerts in the middle of the screen.")
     Checkbox("alertSound", "Alert sound", "Play a sound with short-holiday alerts.")
@@ -2647,6 +2730,13 @@ end
 ---------------------------------------------------------------------------
 local events = CreateFrame("Frame")
 local loginDone, loginPending = false, false
+local function RunLogin()
+    if loginDone then return end
+    loginDone = true
+    HandleLogin()
+    SaveActiveCurrencies()
+    ScheduleNextCheck()
+end
 
 events:RegisterEvent("ADDON_LOADED")
 events:RegisterEvent("PLAYER_LOGIN")
@@ -2659,6 +2749,9 @@ events:SetScript("OnEvent", function(self, event, arg1)
         for key, value in pairs(DB_DEFAULTS) do
             if HolidayHeraldDB[key] == nil then HolidayHeraldDB[key] = value end
         end
+        -- Keep the heads-up setting on one of the dropdown's choices
+        local validDays = { [-1] = true, [0] = true, [1] = true, [3] = true, [7] = true }
+        if not validDays[HolidayHeraldDB.alertDays] then HolidayHeraldDB.alertDays = 3 end
         HolidayHeraldCharDB = HolidayHeraldCharDB or {}
         HolidayHeraldCharDB.seen    = HolidayHeraldCharDB.seen or {}
         HolidayHeraldCharDB.alerted = HolidayHeraldCharDB.alerted or {}
@@ -2678,6 +2771,8 @@ events:SetScript("OnEvent", function(self, event, arg1)
         RequestAllItems()
         if RequestLFDPlayerLockInfo then RequestLFDPlayerLockInfo() end
         C_Calendar.OpenCalendar()
+        -- Backup: if the calendar never answers, carry on anyway after 20 seconds
+        C_Timer.After(20, RunLogin)
 
     elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
         -- This fires several times in a row; wait for it to settle once
@@ -2685,12 +2780,7 @@ events:SetScript("OnEvent", function(self, event, arg1)
         loginPending = true
         C_Timer.After(2, function()
             loginPending = false
-            if not loginDone then
-                loginDone = true
-                HandleLogin()
-                SaveActiveCurrencies()
-                ScheduleNextCheck()
-            end
+            RunLogin()
         end)
 
     elseif event == "BAG_UPDATE_DELAYED" then
@@ -2730,12 +2820,21 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
     elseif cmd == "debug" then
         HolidayHeraldDB.debug = (arg1 == "on")
         Print("preview commands " .. (HolidayHeraldDB.debug and "unlocked." or "locked."))
-    elseif cmd == "preview" or cmd == "alert" or cmd == "reset" or cmd == "toast" then
+    elseif cmd == "preview" or cmd == "alert" or cmd == "reset" or cmd == "toast" or cmd == "start" then
         if not HolidayHeraldDB.debug then
             Print("type /herald debug on first.")
             return
         end
-        if cmd == "reset" then
+        if cmd == "start" and not arg1 then
+            -- Act as if every holiday that's on now just started: runs the real mid-game check
+            for key in pairs(HolidayHeraldCharDB.seen) do
+                if key:find("#started$") then HolidayHeraldCharDB.seen[key] = nil end
+            end
+            CheckForNewStarts()
+        elseif cmd == "start" then
+            local data = FindDataByKey(arg1)
+            if data then StartNotice({ title = data.name, data = data }) end
+        elseif cmd == "reset" then
             wipe(HolidayHeraldCharDB.seen)
             wipe(HolidayHeraldCharDB.alerted)
             Print("this character's seen and alerted lists were cleared.")
@@ -2761,6 +2860,6 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
             if data then ShortAlert({ title = data.name, data = data, daysAway = 0 }) end
         end
     else
-        Print("commands: /herald, /herald options, /herald resetpos, /herald weekly, /herald debug on|off, /herald preview <holiday> [soon|done], /herald alert <holiday>, /herald reset")
+        Print("commands: /herald, /herald options, /herald resetpos, /herald weekly, /herald debug on|off, /herald preview <holiday> [soon|done], /herald alert <holiday>, /herald start [holiday], /herald reset")
     end
 end
