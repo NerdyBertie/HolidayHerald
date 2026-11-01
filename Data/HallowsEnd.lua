@@ -306,17 +306,25 @@ HH.Holidays.HallowsEnd = {
 
     -- Vendor transmog (count line only)
     transmog = {
-        { item = 226453, name = "Patched Harvest Golem's Post", price = 100, cost = "100 Tricky Treats" },
-        { item = 226427, name = "Patched Harvester's Claw", price = 100, cost = "100 Tricky Treats" },
-        -- Patched Harvest Golem set pieces, 100 Tricky Treats each
-        { item = 226461, price = 100 }, { item = 226458, price = 100 }, { item = 226457, price = 100 },
-        { item = 226456, price = 100 }, { item = 226690, price = 100 }, { item = 226455, price = 100 },
-        { item = 226454, price = 100 },
-        { item = 230042, name = "Prowler's Faded Shoulder Cape", price = 50, cost = "50 Tricky Treats" },
-        { item = 208735, name = "Bucket of Morbid Treats", price = 150, cost = "150 Tricky Treats" },
-        { item = 247710, name = "The Horseman's Ghoulish Great Blade", price = 100, cost = "100 Tricky Treats" },
-        { item = 247706, name = "The Horseman's Ghoulish Blade", price = 100, cost = "100 Tricky Treats" },
-        { item = 247715, name = "The Horseman's Ghoulish Bulwark", price = 100, cost = "100 Tricky Treats" },
+        -- Patched Harvest Golem set, 100 Tricky Treats each
+        { item = 226453, group = "Patched Harvest Golem set", name = "Patched Harvest Golem's Post", price = 100, cost = "100 Tricky Treats" },
+        { item = 226427, group = "Patched Harvest Golem set", name = "Patched Harvester's Claw", price = 100, cost = "100 Tricky Treats" },
+        { item = 226461, group = "Patched Harvest Golem set", price = 100 }, { item = 226458, group = "Patched Harvest Golem set", price = 100 },
+        { item = 226457, group = "Patched Harvest Golem set", price = 100 }, { item = 226456, group = "Patched Harvest Golem set", price = 100 },
+        { item = 226690, group = "Patched Harvest Golem set", price = 100 }, { item = 226455, group = "Patched Harvest Golem set", price = 100 },
+        { item = 226454, group = "Patched Harvest Golem set", price = 100 },
+        -- Prowler's Faded pieces (the headgear is an ensemble, checked from its tooltip)
+        { item = 230042, group = "Prowler's Faded", name = "Prowler's Faded Shoulder Cape", price = 50, cost = "50 Tricky Treats" },
+        { item = 230173, group = "Prowler's Faded", kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", price = 150, cost = "150 Tricky Treats",
+          faction = "Alliance", note = "From Dorothy or Pippi, the Hallow's End vanity vendors." },
+        { item = 230173, group = "Prowler's Faded", kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", price = 150, cost = "150 Tricky Treats",
+          faction = "Horde", note = "From Chub or Woim, the Hallow's End vanity vendors." },
+        -- The Horseman's Ghoulish weapons
+        { item = 247710, group = "The Horseman's Ghoulish weapons", name = "The Horseman's Ghoulish Great Blade", price = 100, cost = "100 Tricky Treats" },
+        { item = 247706, group = "The Horseman's Ghoulish weapons", name = "The Horseman's Ghoulish Blade", price = 100, cost = "100 Tricky Treats" },
+        { item = 247715, group = "The Horseman's Ghoulish weapons", name = "The Horseman's Ghoulish Bulwark", price = 100, cost = "100 Tricky Treats" },
+        -- Everything else
+        { item = 208735, group = "Off-hand", name = "Bucket of Morbid Treats", price = 150, cost = "150 Tricky Treats" },
     },
 
     -- Housing decor (new in Midnight). Decor ownership can't be checked yet,
@@ -357,13 +365,7 @@ HH.Holidays.HallowsEnd = {
     },
     decorNote = "Where to buy: the gold and Tricky Treat pieces and the recipes are sold by Echo (Tirisfal Glades), Jack (Elwynn Forest), Spew Gutsout and Jolli Maxiboom (in a hut by the holiday hub in Razorwind Shores, 52.4, 54.4), and Cordula Wolfgang and Holly Twinklebright (by the holiday hub in Founder's Point, 54.3, 32.7).",
 
-    -- Ensembles are checked from their tooltip ("Already known")
-    reminders = {
-        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", price = 150, cost = "150 Tricky Treats",
-          faction = "Alliance", note = "From Dorothy or Pippi, the Hallow's End vanity vendors." },
-        { item = 230173, kind = "ensemble", name = "Ensemble: Prowler's Faded Headgear", price = 150, cost = "150 Tricky Treats",
-          faction = "Horde", note = "From Chub or Woim, the Hallow's End vanity vendors." },
-    },
+    -- (The Prowler's Faded Headgear ensemble lives with the transmog now, next to its shoulder cape.)
 
     tip = {
         short = "Candy buckets in inns give Tricky Treats. Queue for the Headless Horseman daily.",

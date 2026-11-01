@@ -1,5 +1,12 @@
 # Holiday Herald
 
+## v1.6.11
+
+### Fixes
+- Short holidays that run more than one day (like Day of the Dead) no longer say "TODAY ONLY". The alert now says when they end, or when they start if that's later today.
+- Hallow's End: the transmog hover is sorted into sets (Patched Harvest Golem, Prowler's Faded, the Horseman's Ghoulish weapons), and the Prowler's Faded Headgear now sits with its shoulder cape instead of under "Also look for".
+- Group headings in hover lists (like decor and transmog) use the card's "Still to get" color, so they stand out from the items under them.
+
 ## v1.6.10
 
 ### New

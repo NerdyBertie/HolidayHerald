@@ -692,8 +692,9 @@ local function ListTooltip(title, list, colors, notes)
         local tries = (owner and owner.nameRetries) or 0
         local missingNames = false
         tt:AddLine(title, Hex(colors.main))
-        -- Long lists (like a holiday's whole achievement list) only show what's left
-        local hideCollected = #list > 15 and list[1].kind ~= "decor"
+        -- Long lists (like a holiday's whole achievement list) only show what's left.
+        -- Lists sorted into groups (decor, transmog sets) always show everything.
+        local hideCollected = #list > 15 and list[1].kind ~= "decor" and not list[1].group
         local hidden = 0
         local lastGroup
         for _, entry in ipairs(list) do
@@ -703,7 +704,9 @@ local function ListTooltip(title, list, colors, notes)
           elseif ForMyFaction(entry) then
             if entry.group and entry.group ~= lastGroup then
                 tt:AddLine(" ")
-                tt:AddLine(entry.group, Hex(colors.accent))
+                -- Group headings use the card's "Still to get" color, so they don't blend
+                -- in with the purple of uncollected items
+                tt:AddLine(entry.group, Hex((colors.sections and colors.sections.toGet) or colors.accent))
                 lastGroup = entry.group
             end
             local name = ItemName(entry)
@@ -1914,7 +1917,19 @@ local OPEN_LINK = "|Haddon:HolidayHerald:open|h" .. Color(DEFAULT_COLORS.main, "
 
 local function ShortAlert(item)
     local name = (item.data and item.data.name) or item.title
-    local msg = name .. (item.daysAway == 0 and " is TODAY ONLY!" or (" starts in " .. item.daysAway .. (item.daysAway == 1 and " day!" or " days!")))
+    local msg
+    if item.daysAway == 0 and item.started == false then
+        -- Starts later today
+        msg = name .. " starts " .. (FormatEnd(item.startTime) or "later today") .. "!"
+    elseif item.daysAway == 0 then
+        -- Short holidays can still run two or three days, so only say "today only" when it ends today
+        local today = C_DateAndTime.GetCurrentCalendarTime()
+        local e = item.endTime
+        local endsToday = not e or (e.year == today.year and e.month == today.month and e.monthDay == today.monthDay)
+        msg = name .. (endsToday and " is TODAY ONLY!" or (" is on now, but only until " .. (FormatEnd(e) or "soon") .. "!"))
+    else
+        msg = name .. " starts in " .. item.daysAway .. (item.daysAway == 1 and " day!" or " days!")
+    end
     if item.data then
         local wants = {}
         for _, field in ipairs({ "toys", "reminders" }) do
