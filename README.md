@@ -16,7 +16,7 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Collection tracking.** Mounts, toys, pets, transmog, drake armor manuscripts, ensembles, and achievements are checked against your collection. Collected items gray out, so you only see what you're missing.
 - **Housing decor shopping list.** Every piece of a holiday's decor in one hover, grouped by what it costs, with where to buy it. Pieces you already have turn gray.
 - **Holiday currency totals.** See how many Tricky Treats (and more to come) you'd need for one of everything you're still missing, next to how many your whole account has: every character's bags and banks plus the warband bank. Hover to see who has how many.
-- **Map pins.** With HandyNotes installed, holiday spots show on your zone and continent maps while the holiday is on: event hubs, vendors, quest towns, and anyone you need to talk to first. Hover a pin for details, and with TomTom installed, click it for a waypoint. Turn them off in the settings.
+- **Map pins.** With HandyNotes installed, holiday spots show on your zone and continent maps while the holiday is on: event hubs, vendors, quest towns, and anyone you need to talk to first. Each holiday's pins wear its own icon, so they're easy to tell apart. Hover a pin for details, and with TomTom installed, click it for a waypoint. Turn them off in the settings.
 - **Event timers.** Repeating events, like Hallow's End's Community Candy Crawl in your neighborhood and the Wickerman speech that gives the buff, show whether they're on now or how long until the next one.
 - **Always-current achievements.** Each holiday's achievement list is read straight from the game, so brand new achievements show up on their own. Hover to see only what you still need.
 - **Holiday boss info.** See every drop at a glance, plus whether your account's best daily roll is still available and whether this character has done the boss today. Click the boss line to open the Dungeon Finder with the holiday dungeon already picked. Just hit Find Group! And if you're still missing the boss's mount, you get a little "good luck!" too.
@@ -30,7 +30,7 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Short-holiday alerts.** Short holidays get a quiet chat reminder as they get close, then a loud on-screen alert the day before and the day of, so they can't slip by. Pick how early the reminders start, or turn them off.
 - **Stays quiet.** A full popup when a holiday first shows up and again on the day it starts, then just a chat line after that. Click the chat link, or type `/herald` at any time to see the popup.
 - **Micro-holidays.** Little holidays like The Great Gnomeregan Run get a chat line on the day and their own card.
-- **Weekly events.** PvP Brawls, bonus events, and Timewalking (with its expansion) listed in their own section.
+- **Weekly events.** PvP Brawls, bonus events, and Timewalking (with its expansion) listed in their own section. Click a Timewalking or Brawl event that's on now to open the right window, ready to queue.
 - **Trading Post reminder.** See your Trader's Tender at a glance, get a heads-up when new items arrive on the 1st, and click to open the Traveler's Log.
 - **Celebration toast.** Finish a holiday's meta and the NerdyBertie herald gives you a thumbs-up. (I call her Matilda) <3
 - **Achievement toasts.** Every achievement you earn gets a little cheer from a very dapper herald.

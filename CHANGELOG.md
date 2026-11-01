@@ -1,5 +1,18 @@
 # Holiday Herald
 
+## v1.6.12
+
+### Fixes
+- Map pins now disappear the moment a holiday ends, instead of up to a few hours later (or at your next login).
+
+### New
+- Click a Timewalking event that's on now (under Weekly Events) to open the Dungeon Finder with Timewalking already picked. Just hit Find Group!
+- Click a PvP Brawl that's on now to open the PvP window with the Brawl picked.
+- Map pins wear each holiday's own icon (like the pumpkin for Hallow's End), so you can tell holidays apart when they overlap.
+- Day of the Dead map pins (with HandyNotes): every graveyard site with Catrina, Chapman, and which races' spirit is there, plus the neutral Dalaran and Shattrath spots.
+- Day of the Dead: the tip lists the neutral Dalaran and Shattrath spots for races without their own graveyard, and the Contender's Costumes show their price (100 gold). The transmog hover is sorted into crowns, deathmasks, and veils, with prices.
+- Day of the Dead: a new secret about the real-world story behind Catrina, plus tips for doing the pet quest in Dalaran (bring your flour and milk) and using a Spirit Candle as a cooking fire.
+
 ## v1.6.11
 
 ### Fixes

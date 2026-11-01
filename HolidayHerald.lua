@@ -340,6 +340,36 @@ local function OpenDungeonFinder(dungeonID)
     end
 end
 
+-- Opens the PvP window on Quick Match with this week's Brawl picked.
+-- (Like the Dungeon Finder, addons can't queue you; you still click Join Battle.)
+local function OpenBrawl()
+    if not PVPUIFrame and C_AddOns and C_AddOns.LoadAddOn then pcall(C_AddOns.LoadAddOn, "Blizzard_PVPUI") end
+    if PVEFrame_ShowFrame and HonorFrame then
+        pcall(PVEFrame_ShowFrame, "PVPUIFrame", HonorFrame)
+    elseif TogglePVPUI then
+        pcall(TogglePVPUI)
+    end
+    C_Timer.After(0, function()
+        if HonorFrame_SetType then pcall(HonorFrame_SetType, HonorFrame, "bonus") end
+        local brawl = HonorFrame and HonorFrame.BonusFrame and HonorFrame.BonusFrame.BrawlButton
+        if brawl and HonorFrameBonusFrame_SelectButton then pcall(HonorFrameBonusFrame_SelectButton, brawl) end
+    end)
+end
+
+-- The Timewalking entry in the Dungeon Finder's list, if there is one this week
+local function TimewalkingDungeonID()
+    if not (GetNumRandomDungeons and GetLFGRandomDungeonInfo) then return nil end
+    local fallback
+    for i = 1, GetNumRandomDungeons() do
+        local id, name = GetLFGRandomDungeonInfo(i)
+        if id and name and name:lower():find("timewalking", 1, true) then
+            if not IsLFGDungeonJoinable or IsLFGDungeonJoinable(id) then return id end
+            fallback = fallback or id
+        end
+    end
+    return fallback
+end
+
 ---------------------------------------------------------------------------
 -- Collection checks
 -- Returns true (owned), false (not owned), or nil (can't check / not loaded).
@@ -1843,11 +1873,32 @@ local function Render(items)
             else
                 label = Color("FFD100", "In " .. item.daysAway .. " days: ") .. Color(SOFT, title)
             end
-            local tooltip
+            local tooltip, onClick
+            local isTimewalking = item.title:lower():find("timewalking", 1, true)
+            local isBrawl = item.title:lower():find("brawl", 1, true)
+            local onNow = item.daysAway == 0 and item.started ~= false
             if item.description and item.description ~= "" then
                 tooltip = TextTooltip(item.title, DEFAULT_COLORS, item.description)
             end
-            y = y - PlaceLine(popup, { text = label, tooltip = tooltip }, 20, y, width - 8) - 2
+            -- Timewalking that's on now: click to open the Dungeon Finder with it picked
+            if isTimewalking and onNow then
+                local base = tooltip
+                tooltip = function(tt)
+                    if base then base(tt) else tt:AddLine(item.title, Hex(DEFAULT_COLORS.main)) end
+                    tt:AddLine(" ")
+                    tt:AddLine("Click: open the Dungeon Finder with Timewalking picked.", 1, 0.82, 0)
+                end
+                onClick = function() OpenDungeonFinder(TimewalkingDungeonID()) end
+            elseif isBrawl and onNow then
+                local base = tooltip
+                tooltip = function(tt)
+                    if base then base(tt) else tt:AddLine(item.title, Hex(DEFAULT_COLORS.main)) end
+                    tt:AddLine(" ")
+                    tt:AddLine("Click: open the PvP window with this week's Brawl picked.", 1, 0.82, 0)
+                end
+                onClick = OpenBrawl
+            end
+            y = y - PlaceLine(popup, { text = label, tooltip = tooltip, onClick = onClick }, 20, y, width - 8) - 2
         end
     end
 
@@ -2025,7 +2076,9 @@ function PinHandler:GetNodes2(uiMapID, minimap)
         local entry
         coord, entry = next(nodes, coord)
         if coord then
-            local icon = entry.pin.icon or (entry.pin.warning and ICONS.boss) or PIN_ICON
+            -- Each holiday's pins wear that holiday's own card icon, so they're easy to tell apart
+            local holidayIcon = CardIcon({ data = entry.data, icon = PIN_ICON })
+            local icon = entry.pin.icon or (entry.pin.warning and ICONS.boss) or holidayIcon
             return coord, nil, icon, entry.onContinent and 1 or 1.4, 1
         end
     end
@@ -2120,6 +2173,10 @@ local function NoteScan(items)
         end
         if item.category == "holiday" and item.started == false and item.startEpoch then
             nextStartAt = math.min(nextStartAt or item.startEpoch, item.startEpoch)
+        end
+        -- Also wake up when a holiday that's on ends, so its map pins go away right then
+        if item.data and item.daysAway == 0 and item.started ~= false and item.endEpoch then
+            nextStartAt = math.min(nextStartAt or item.endEpoch, item.endEpoch)
         end
     end
     HH.RefreshPins()
