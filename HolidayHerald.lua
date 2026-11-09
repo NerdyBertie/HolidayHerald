@@ -2597,11 +2597,13 @@ end
 -- Every NerdyBertie addon carries this same function, the same list, and the
 -- same Media/workshop.tga image, so the page looks the same whoever builds it.
 local WORKSHOP_ADDONS = {
-    { name = "HandyNotes: Dive Bar Front Crawl", folder = "HandyNotes_DiveBarCrawl" },
+    { name = "HandyNotes: Dive Bar Front Crawl",   folder = "HandyNotes_DiveBarCrawl" },
     { name = "HandyNotes: Seeking the Soulstones", folder = "HandyNotes_SeekingTheSoulstones" },
-    { name = "ItemWatch",                        folder = "ItemWatch" },
-    { name = "Boomkin Buff Watcher",             folder = "BoomkinBuffWatcher" },
-    { name = "Holiday Herald",                   folder = "HolidayHerald" },
+    { name = "ItemWatch",                          folder = "ItemWatch" },
+    { name = "Boomkin Buff Watcher",               folder = "BoomkinBuffWatcher" },
+    { name = "Holiday Herald",                     folder = "HolidayHerald" },
+    { name = "Pinkies Up!",                        folder = "PinkiesUp" },
+    { name = "Chum Chimes",                        folder = "ChumChimes" },
 }
 
 local function GetBrandCategory()

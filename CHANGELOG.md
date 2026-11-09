@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.6.13
+
+### New
+- The NerdyBertie page in Options → AddOns now lists Pinkies Up!, a tea-sipping fish who says grats for every achievement, and Chum Chimes, a friendly chime when guildies or friends are in your zone or right near you.
+
 ## v1.6.12
 
 ### Fixes
