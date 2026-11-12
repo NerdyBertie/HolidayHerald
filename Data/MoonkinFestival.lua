@@ -44,7 +44,7 @@ HH.Holidays.MoonkinFestival = {
         },
     },
 
-    -- HandyNotes map pins (Moonglade, map 80). Clookle from Roberta in game (Nov 12 2026); the rest from guides.
+    -- HandyNotes map pins (Moonglade, map 80). All checked in game by Roberta, Nov 12 2026.
     pins = {
         { map = 80, x = 45.4, y = 62.0, title = "Moonkin Festival: Makkaw",
           note = { "Start here: Moonkin Monitoring.", { "Astralaire (dancing)", "45.4, 63.4" }, { "Pewkew (Moonfire)", "42.4, 66.5" }, { "Dramock (naptime)", "44.7, 69.9" } } },
