@@ -3,6 +3,7 @@
 ## v1.6.13
 
 ### New
+- Moonkin Festival: map pins (with HandyNotes) for Makkaw, the Moonberries, Clookle's den entrance, Clookle himself, and Xavinox, and a fuller tip: how to get to Moonglade, where Makkaw's three classes are, and what the antidote is made of.
 - The NerdyBertie page in Options → AddOns now lists Pinkies Up!, a tea-sipping fish who says grats for every achievement, and Chum Chimes, a friendly chime when guildies or friends are in your zone or right near you.
 
 ## v1.6.12
