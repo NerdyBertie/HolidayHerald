@@ -1,5 +1,21 @@
 # Holiday Herald
 
+## v1.6.15
+
+### New
+- WoW's Anniversary: countdowns for Story Time, Fashion Frenzy, and Mount Mania at the celebration grounds, showing whether each is on now or how long until the next one.
+- WoW's Anniversary map pins (with HandyNotes) for the celebration grounds (Yllana's tent), Doomwalker, the Sha of Anger, and Archavon in Tanaris, Azuregos in Azshara, Lord Kazzak in the Blasted Lands, plus the four Dragons of Nightmare.
+- WoW's Anniversary: the tip lists the quests to pick up (Meet and Greet, Chromie's Codex, Soldier of Time, Timely Gate Crashers) and what the weekly Bronze Celebration Cache holds.
+- WoW's Anniversary: new secrets for the chicken seller at the celebration, and for the Druid shortcut to the Dragons of Nightmare.
+- WoW's Anniversary: pets, toys, and the Coldflame transmog pieces from Historian Ma'di, with prices, plus the Balloon Chest and Darkmoon balloon pets from Carl Goodup.
+- WoW's Anniversary: the long tip is split into shorter hovers for quests, badges and vendors, and Breanni and Kieule.
+- WoW's Anniversary: the new "WoW's 22nd Anniversary" achievement for logging in during the event.
+- WoW's Anniversary: a pin and tip line for Kieule and Breanni, the pet and toy vendors at the main tent, including the cats that count toward Crazy for Cats, which is now on the achievements list.
+- WoW's Anniversary: the tip mentions the portals from Stormwind and Orgrimmar, how the XP and reputation buffs stack, and that quests and activities count Warband-wide.
+
+### Fixed
+- WoW's Anniversary: Doomwalker no longer says he always drops the Illidari Doomhawk. The Doomhawk and Azure Worldchiller are rare drops or 5,000 badges at Historian Ma'di.
+
 ## v1.6.14
 
 ### New
