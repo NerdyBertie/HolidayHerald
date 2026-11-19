@@ -1544,6 +1544,7 @@ local function PlaceLine(parent, spec, x, y, width)
         b.text:SetFontObject(GameFontNormalSmall)
         b.text:ClearAllPoints()
         b.text:SetPoint("TOPLEFT", 0, 0)
+        b.text:SetJustifyH("LEFT")
         b.text:SetWidth(width)
         b.text:SetText(spec.header:upper())
         if spec.color then
@@ -1561,12 +1562,20 @@ local function PlaceLine(parent, spec, x, y, width)
     b.text:SetFontObject(GameFontHighlight)
     b.text:SetTextColor(1, 1, 1)
     b.text:ClearAllPoints()
-    b.text:SetPoint("TOPLEFT", 20, 0)
     b.right:SetText(spec.right or "")
-    local rightWidth = spec.right and (b.right:GetStringWidth() + 10) or 0
-    b.text:SetWidth(width - 20 - rightWidth)
+    if spec.center then
+        -- A line centered across the popup (its icon, if any, goes inside the text)
+        b.text:SetPoint("TOPLEFT", 0, 0)
+        b.text:SetJustifyH("CENTER")
+        b.text:SetWidth(width)
+    else
+        local rightWidth = spec.right and (b.right:GetStringWidth() + 10) or 0
+        b.text:SetPoint("TOPLEFT", 20, 0)
+        b.text:SetJustifyH("LEFT")
+        b.text:SetWidth(width - 20 - rightWidth)
+    end
     b.text:SetText(spec.text)
-    if spec.icon then
+    if spec.icon and not spec.center then
         b.icon:SetTexture(spec.icon)
         b.icon:Show()
     else
@@ -1580,7 +1589,8 @@ local function PlaceLine(parent, spec, x, y, width)
     return height
 end
 
-local function PlaceHeader(text, y, hint)
+local function PlaceHeader(text, y, hint, x, width)
+    x = x or 20
     headerCount = headerCount + 1
     local h = headerPool[headerCount]
     if not h then
@@ -1591,20 +1601,28 @@ local function PlaceHeader(text, y, hint)
     end
     -- Optional small hint on the right side of the header, like "Hover any line for details"
     h.hint:ClearAllPoints()
-    h.hint:SetPoint("BOTTOMRIGHT", popup, "TOPRIGHT", -22, y - 14)
+    if width then
+        h.hint:SetPoint("BOTTOMRIGHT", popup, "TOPLEFT", x + width - 2, y - 14)
+    else
+        h.hint:SetPoint("BOTTOMRIGHT", popup, "TOPRIGHT", -22, y - 14)
+    end
     h.hint:SetText(hint or "")
     h.hint:SetShown(hint ~= nil)
     local r, g, b = Hex(DEFAULT_COLORS.main)
     h.text:ClearAllPoints()
-    h.text:SetPoint("TOPLEFT", 20, y)
+    h.text:SetPoint("TOPLEFT", x, y)
     h.text:SetText(text)
     h.text:SetTextColor(r, g, b)
     h.text:Show()
     h.rule:ClearAllPoints()
     h.rule:SetColorTexture(r, g, b, 0.45)
     h.rule:SetHeight(1)
-    h.rule:SetPoint("TOPLEFT", 20, y - 16)
-    h.rule:SetPoint("TOPRIGHT", -20, y - 16)
+    h.rule:SetPoint("TOPLEFT", x, y - 16)
+    if width then
+        h.rule:SetWidth(width)          -- a header in a side column
+    else
+        h.rule:SetPoint("TOPRIGHT", -20, y - 16)
+    end
     h.rule:Show()
     return y - 24
 end
@@ -1794,7 +1812,7 @@ local function PlaceCards(list, y, columns, columnWidth)
     return math.min(columnY[1], columnY[2])
 end
 
-local function Render(items)
+local function Render(items, sideWeekly)
     ReleaseAll()
     lastItems = items
     pendingData = false
@@ -1814,22 +1832,13 @@ local function Render(items)
     -- Three or more cards: go wide, with two columns of cards
     local columns = (#holidays + #micro >= TWO_COLUMN_AT) and 2 or 1
     local columnWidth = POPUP_WIDTH - 32
-    popup:SetWidth(columns * columnWidth + (columns - 1) * COLUMN_GAP + 32)
-    local width = popup:GetWidth() - 32
+    -- Too tall for the screen with one column of cards: Weekly Events moves to a column on the right
+    local side = sideWeekly and columns == 1
+    popup:SetWidth((columns + (side and 1 or 0)) * columnWidth + (columns + (side and 1 or 0) - 1) * COLUMN_GAP + 32)
+    local width = columns * columnWidth + (columns - 1) * COLUMN_GAP
 
-    local hint = Color(GRAY, "Hover any line for details")
-    if #holidays > 0 then
-        y = PlaceHeader("Holidays", y, hint)
-        hint = nil
-        y = PlaceCards(holidays, y, columns, columnWidth)
-    end
-
-    if #micro > 0 then
-        y = PlaceHeader("Micro-holidays", y, hint)
-        y = PlaceCards(micro, y, columns, columnWidth)
-    end
-
-    -- When the daily reset happens, asked of the game so it's right in every region
+    -- When the daily reset happens, asked of the game so it's right in every region.
+    -- It applies to everything below, so it sits right under the title.
     if HolidayHeraldDB.showReset and (#holidays > 0 or #micro > 0) and C_DateAndTime.GetSecondsUntilDailyReset then
         local seconds = C_DateAndTime.GetSecondsUntilDailyReset()
         local realmNow = ToEpoch(C_DateAndTime.GetCurrentCalendarTime())
@@ -1839,23 +1848,39 @@ local function Render(items)
             local when = FormatEnd({ year = r.year, month = r.month, monthDay = r.day, hour = r.hour, minute = r.min })
             local hours, minutes = math.floor(seconds / 3600), math.floor((seconds % 3600) / 60)
             y = y - PlaceLine(popup, {
-                icon = ICONS.reset,
-                text = Color(SOFT, "Daily reset: " .. when),
+                center = true,
+                text = "|T" .. ICONS.reset .. ":14|t " .. Color(SOFT, "Daily reset: " .. when),
                 tooltip = function(tt)
                     tt:AddLine("Daily reset", Hex(DEFAULT_COLORS.main))
                     tt:AddLine(("In %dh %02dm."):format(hours, minutes), 1, 1, 1)
                     tt:AddLine("Daily quests and the holiday boss's daily loot come back at this time every day.", 0.72, 0.68, 0.61, true)
                     tt:AddLine("Change how times are shown under Start and end times in the settings.", 0.55, 0.52, 0.47, true)
                 end,
-            }, 20, y, width - 8) - 2
+            }, 20, y, popup:GetWidth() - 40) - 4      -- the full width of the popup, so it centers across all of it
         end
     end
+    local topY = y      -- where the cards (and a Weekly Events side column) start
 
+    local hint = Color(GRAY, "Hover any line for details")
+    if #holidays > 0 then
+        y = PlaceHeader("Holidays", y, hint, 20, side and (columnWidth - 8) or nil)
+        hint = nil
+        y = PlaceCards(holidays, y, columns, columnWidth)
+    end
+
+    if #micro > 0 then
+        y = PlaceHeader("Micro-holidays", y, hint, 20, side and (columnWidth - 8) or nil)
+        y = PlaceCards(micro, y, columns, columnWidth)
+    end
+
+    -- The daily reset line and the Weekly Events section. xo shifts it right when it
+    -- sits in its own column; returns the y below its last line.
     local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost
+    local function PlaceWeekly(y, xo, width)
     if showWeeklySection then
-        y = PlaceHeader("Weekly Events", y)
+        y = PlaceHeader("Weekly Events", y, nil, 20 + xo, xo > 0 and (width - 8) or nil)
         if HolidayHeraldDB.showTradingPost then
-            y = y - PlaceLine(popup, TradingPostLine(), 20, y, width - 8) - 2
+            y = y - PlaceLine(popup, TradingPostLine(), 20 + xo, y, width - 8) - 2
         end
     end
     if #weekly > 0 and HolidayHeraldDB.showWeekly then
@@ -1898,12 +1923,28 @@ local function Render(items)
                 end
                 onClick = OpenBrawl
             end
-            y = y - PlaceLine(popup, { text = label, tooltip = tooltip, onClick = onClick }, 20, y, width - 8) - 2
+            y = y - PlaceLine(popup, { text = label, tooltip = tooltip, onClick = onClick }, 20 + xo, y, width - 8) - 2
         end
+    end
+    return y
+    end
+
+    if side then
+        -- Cards on the left, the weekly section in its own column on the right
+        local sideY = PlaceWeekly(topY, columnWidth + COLUMN_GAP, columnWidth)
+        y = math.min(y, sideY)
+    else
+        y = PlaceWeekly(y, 0, width)
     end
 
     if #holidays == 0 and #micro == 0 and not showWeeklySection then
         y = y - PlaceLine(popup, { text = Color(SOFT, "No holidays or events in the next " .. HolidayHeraldDB.lookahead .. " days.") }, 20, y, width - 8)
+    end
+
+    -- Taller than the screen with one column of cards: redo it with Weekly Events beside them
+    if not sideWeekly and columns == 1 and showWeeklySection
+        and (-y + 18) > (UIParent:GetHeight() * 0.9) / (popup:GetScale() or 1) then
+        return Render(items, true)
     end
 
     popup:SetHeight(-y + 18)

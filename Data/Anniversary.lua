@@ -47,7 +47,7 @@ HH.Holidays.Anniversary = {
         { item = 136925, name = "Corgi Pup",                   cost = "200 Timewarped Badges" },
         { item = 186556, name = "Timeless Mechanical Dragonling", cost = "200 Timewarped Badges" },
         { item = 228781, name = "Lil'Doomy's Hilt",            cost = "100 Timewarped Badges" },
-        -- Breanni (main tent): cats and the Polished Pet Charm pets
+        -- Breanni (down the stairs from the main tent): cats and the Polished Pet Charm pets
         { item = 8490,   name = "Cat Carrier (Siamese)",       cost = "Breanni (60 silver)" },
         { item = 46398,  name = "Cat Carrier (Calico Cat)",    cost = "Breanni (50 gold)" },
         { item = 129798, name = "Plump Jelly",                 cost = "Breanni (50 Polished Pet Charms)" },
@@ -151,8 +151,9 @@ HH.Holidays.Anniversary = {
         { map = 71, x = 62.9, y = 50.6, title = "Anniversary celebration",
           note = { "Yllana is under the big main tent, right in the middle of the celebration.",
                    "Pick up Celebrate Good Fun! here each day. Story Time, Fashion Frenzy and Mount Mania all happen on these grounds." } },
-        { map = 71, x = 62.4, y = 49.9, title = "Kieule and Breanni",
-          note = { "At the main tent.",
+        { map = 71, x = 62.4, y = 49.9, title = "Chromie, Breanni, and Kieule",
+          note = { "Just off the main tent, down the stairs. All three stand close together.",
+                   { "Chromie", "Chromie's Codex quest" },
                    { "Breanni", "Pets, for gold, silver, and Polished Pet Charms" },
                    { "Kieule", "Toys, for Ancient Mana" } } },
         { map = 26, x = 63.3, y = 26.7, title = "Dragon of Nightmare: Lethon",
@@ -206,9 +207,11 @@ HH.Holidays.Anniversary = {
               "#Korrak's Revenge",
               "Gives 20 badges for a win and 10 for a loss. Earning 200 badges there unlocks the Stormpike Battle Ram or Frostwolf Snarler.",
           } },
-        { short = "Breanni and Kieule sell pets and toys at the main tent.",
+        { short = "Breanni and Kieule sell pets and toys, down the stairs from the main tent.",
           title = "Breanni and Kieule",
           hover = {
+              "They stand close together, down the stairs from the main tent and near Chromie.",
+              " ",
               "Breanni sells pets for gold, silver, and Polished Pet Charms. Kieule, next to her, sells toys for Ancient Mana.",
               " ",
               "#Where the currencies come from",

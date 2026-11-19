@@ -10,8 +10,11 @@
 - WoW's Anniversary: pets, toys, and the Coldflame transmog pieces from Historian Ma'di, with prices, plus the Balloon Chest and Darkmoon balloon pets from Carl Goodup.
 - WoW's Anniversary: the long tip is split into shorter hovers for quests, badges and vendors, and Breanni and Kieule.
 - WoW's Anniversary: the new "WoW's 22nd Anniversary" achievement for logging in during the event.
-- WoW's Anniversary: a pin and tip line for Kieule and Breanni, the pet and toy vendors at the main tent, including the cats that count toward Crazy for Cats, which is now on the achievements list.
+- WoW's Anniversary: a pin for Chromie and the pet and toy vendors Kieule and Breanni just off the main tent, with a tip line for the vendors, including the cats that count toward Crazy for Cats, which is now on the achievements list.
 - WoW's Anniversary: the tip mentions the portals from Stormwind and Orgrimmar, how the XP and reputation buffs stack, and that quests and activities count Warband-wide.
+
+- When the popup would be taller than the screen, Weekly Events moves to its own column beside the cards instead of running off the bottom.
+- The daily reset line now sits at the top, centered under the title, since it applies to everything below.
 
 ### Fixed
 - WoW's Anniversary: Doomwalker no longer says he always drops the Illidari Doomhawk. The Doomhawk and Azure Worldchiller are rare drops or 5,000 badges at Historian Ma'di.
