@@ -19,6 +19,19 @@ HH.Holidays.Anniversary = {
         titleGradient = { "3F8CFF", "E3C27A", "C41E3A" },   -- Alliance blue -> bronze -> Horde crimson
         sections = { toGet = "5FA0FF", howTo = "E3C27A", secrets = "E04A5E" },   -- Alliance blue, bronze, Horde crimson
     },
+    -- Each faction gets its own look (the card above is for anyone else, like a new Pandaren)
+    factionColors = {
+        Alliance = {
+            main = "5FA0FF", accent = "E3C27A", card = "141A24", border = "3F8CFF",
+            titleGradient = { "3F8CFF", "A9C8F0", "E3C27A" },      -- blue -> silver -> gold
+            sections = { toGet = "5FA0FF", howTo = "E3C27A", secrets = "A9C8F0" },
+        },
+        Horde = {
+            main = "E0566A", accent = "E3A43C", card = "241418", border = "C41E3A",
+            titleGradient = { "C41E3A", "E0566A", "E3A43C" },      -- crimson -> ember -> gold
+            sections = { toGet = "E0566A", howTo = "E3A43C", secrets = "E04A5E" },
+        },
+    },
 
     achievements = {
         { achievement = 63714, name = "WoW's 22nd Anniversary" },
@@ -31,6 +44,10 @@ HH.Holidays.Anniversary = {
         { achievement = 40977, name = "Codex Editor: Ahn'Qiraj" },
         { achievement = 13930, name = "Alterac Valley of Olde" },
         { achievement = 8397,  name = "Crazy for Cats" },
+        { achievement = 40870, name = "Azeroth's Greatest Detective" },
+        { achievement = 40871, name = "Assistant to the Assistant" },
+        { achievement = 40873, name = "Crate Insurance Agent" },
+        { achievement = 40979, name = "No Crate Left Behind" },
     },
 
     mounts = {
@@ -68,6 +85,7 @@ HH.Holidays.Anniversary = {
         { item = 140670, name = "Souvenir Elekk",              cost = "Kieule (100 Ancient Mana)" },
         { item = 140671, name = "Souvenir Raptor",             cost = "Kieule (100 Ancient Mana)" },
         { item = 130151, name = "The \"Devilsaur\" Lunchbox",  cost = "Kieule (1000 Ancient Mana)" },
+        { item = 140231, name = "Narcissa's Mirror",           cost = "Breanni (1000 Polished Pet Charms)" },
         { item = 229828, name = "20th Anniversary Balloon Chest", cost = "Carl Goodup (100 Timewarped Badges)" },
         { item = 158149, name = "Overtuned Corgi Goggles",    cost = "200 Timewarped Badges" },
         { item = 228789, name = "Coldflame Ring",             cost = "100 Timewarped Badges" },
@@ -110,14 +128,21 @@ HH.Holidays.Anniversary = {
         { item = 228197, kind = "ensemble", name = "Eternal Battlegear of Wrath" },
     },
 
-    -- Daily quests (2025 IDs from Wowhead; VERIFY in-game)
+    -- Daily quests (IDs confirmed in game)
     dailies = {
         { quest = 84616, group = "Celebration grounds (Tanaris)", name = "Celebrate Good Fun!", giver = "Yllana",
           where = "An extra +10% XP and reputation for 12 hours of play time." },
         { quests = { 43323, 43461 }, group = "Celebration grounds (Tanaris)", name = "A Time to Reflect",
           giver = "Historian Llore or Ju'pa", where = "Anniversary trivia. Answer right for 5 Timewarped Badges." },
-        { quest = 6781, group = "Korrak's Revenge", name = "More Armor Scraps",
-          where = "Alterac Valley of Olde, from the PvP group finder." },
+    },
+    -- Weekly quests (IDs confirmed in game)
+    weeklies = {
+        { quest = 82783, name = "Chromie's Codex", giver = "Chromie",
+          where = "A quest each week on every character. Rewards Timewarped Badges and a Bronze Celebration Cache." },
+        { quest = 57300, name = "Soldier of Time", giver = "Izaik Kadarov",
+          where = "Earn 500 honor in Korrak's Revenge. Rewards 5 Marks of Honor, 150 Timewarped Badges, and caches." },
+        { quest = 60215, name = "Timely Gate Crashers", giver = "Izaik Kadarov",
+          where = "Kill Doomwalker, Archavon, and the Sha of Anger." },
     },
     dailyNote = "World bosses have a daily loot lockout too. Hover the World bosses line under How to for where they are.",
 
@@ -187,7 +212,7 @@ HH.Holidays.Anniversary = {
               "Meet and Greet: a one-time quest each event (once per character). Turning it in gives you Shopping Squee!",
               "Celebrate Good Fun! and A Time to Reflect (trivia) can be repeated.",
               "Chromie's Codex (from Chromie): the Codex of Chromie event, repeatable. The first clear each week (once per Warband) gives 200 Timewarped Badges, plus a Bronze Celebration Cache of Treasures.",
-              "Soldier of Time (from Izaik Kadarov): earn 500 honor in Korrak's Revenge, repeatable. Rewards Marks of Honor, 100 Timewarped Badges, and caches.",
+              "Soldier of Time (from Izaik Kadarov): earn 500 honor in Korrak's Revenge, repeatable. Rewards 5 Marks of Honor, 150 Timewarped Badges, and caches.",
               "Timely Gate Crashers (from Izaik Kadarov): kill Doomwalker, Archavon, and the Sha of Anger, repeatable.",
               " ",
               "#Bronze Celebration Cache",
@@ -203,9 +228,6 @@ HH.Holidays.Anniversary = {
               " ",
               "#Alterac Valley gear",
               "Thanthaldis Snowgleam (Alliance) and Jorek Ironside (Horde) charge 1 to 2 Marks of Honor plus 20 to 90 badges. Some weapons need you to finish The Legend of Korrak in Classic Alterac Valley first.",
-              " ",
-              "#Korrak's Revenge",
-              "Gives 20 badges for a win and 10 for a loss. Earning 200 badges there unlocks the Stormpike Battle Ram or Frostwolf Snarler.",
           } },
         { short = "Breanni and Kieule sell pets and toys, down the stairs from the main tent.",
           title = "Breanni and Kieule",
@@ -218,6 +240,8 @@ HH.Holidays.Anniversary = {
               "Neither comes from the event. Ancient Mana drops in Suramar (Legion) from creatures, mining, herbs, and ancient mana nodes. Polished Pet Charms come from pet battle quests, pet world quests, and pet battle dungeons.",
               " ",
               "Breanni's Cat Carriers (Siamese and Calico) count toward the Crazy for Cats achievement.",
+              " ",
+              "Polished Pet Charms bind to your Warband, so you can pool them in the Warband bank.",
           } },
         { short = "World bosses: Kazzak, Azuregos, a Dragon of Nightmare, and three in Tanaris.",
           title = "Anniversary world bosses",
@@ -238,12 +262,27 @@ HH.Holidays.Anniversary = {
               " ",
               "Each boss has a daily loot lockout. Doomwalker can drop the Illidari Doomhawk and the Azure Worldchiller.",
           } },
-        { short = "Blackrock Depths is back as a 25-player raid in Raid Finder.",
+        { short = "Korrak's Revenge: a great way to level and earn honor. Click to queue.",
+          title = "Korrak's Revenge",
+          click = "korrak",
+          hover = {
+              "Experience the Alterac Valley of old: slay Korrak the Bloodrager and push back the troll invasion.",
+              " ",
+              "#Rewards",
+              "Gives 20 badges for a win and 10 for a loss. Earning 200 badges there unlocks the Stormpike Battle Ram or Frostwolf Snarler.",
+              "The honor you earn there counts toward Soldier of Time (500 honor) and your honor level.",
+              " ",
+              "Click: open the PvP window with Korrak's Revenge picked.",
+          } },
+        { short = "Blackrock Depths is back as a 25-player raid in Raid Finder. Click to queue.",
           title = "Blackrock Depths",
+          click = { raid = 2750 },
           hover = {
               "Queue through Raid Finder for 8 bosses and 5 mini-bosses, with classic rewards scaled up.",
               " ",
               "For A Dark Iron Past, find all of Moira Thaurissan's Temporal Missives along the way.",
+              " ",
+              "Click: open Raid Finder with Blackrock Depths picked.",
           } },
     },
 
@@ -255,6 +294,8 @@ HH.Holidays.Anniversary = {
         { teaser = "Secret: a familiar face is selling chicken...",
           reveal = "Leeroy Jenkins is at the celebration, selling chicken. At least he's got a plan this time." },
         { teaser = "Secret: Druids have a shortcut to the dragons...",
-          reveal = "If you've opened your Druid Class Hall in Legion, you can cast Dreamwalk from anywhere to reach the Emerald Dreamway. Its portals lead to Duskwood, Feralas, and the Hinterlands, where Emeriss, Ysondre, and Lethon wait." },
+          reveal = "If you've opened your Druid Class Hall in Legion, you can cast Dreamwalk from anywhere to reach the Emerald Dreamway. Its portals lead to Duskwood, Feralas, and the Hinterlands, where Emeriss, Ysondre, and Lethon wait. Cast it again while you're still in the Dreamway to head back to where you started. Cast it after taking a portal and it takes you back to the Dreamway instead, ready for the next dragon." },
+        { teaser = "Secret: those missing crates are more than a chore...",
+          reveal = "Finding all 11 Celebration Crates earns Azeroth's Greatest Detective and the Detective title. That title is the key to starting a very long puzzle hunt that ends with a mount: Keys to Incognitro, the Indecipherable Felcycle. The anniversary is a good time to begin. Expect many steps and a guide or two." },
     },
 }

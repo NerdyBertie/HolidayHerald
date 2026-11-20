@@ -1,5 +1,25 @@
 # Holiday Herald
 
+## v1.6.16
+
+### New
+- WoW's Anniversary: a new secret about the Celebration Crates and the Detective title, which is the key to a very long puzzle hunt that ends with a mount.
+- WoW's Anniversary: Azeroth's Greatest Detective, Assistant to the Assistant, Crate Insurance Agent, and No Crate Left Behind are on the achievements list.
+- WoW's Anniversary: Narcissa's Mirror (1,000 Polished Pet Charms from Breanni) is on the toys list, and the Breanni hover says the charms bind to your Warband, so you can pool them in the Warband bank.
+- WoW's Anniversary: the Druid Dreamwalk secret now explains both casts: from the Dreamway it takes you back to where you started, and after a portal it takes you back to the Dreamway, ready for the next dragon.
+- WoW's Anniversary: a new Weekly quests line for Chromie's Codex, Soldier of Time, and Timely Gate Crashers, counted like the dailies ("1 of 3").
+- WoW's Anniversary: a new Korrak's Revenge line (a great way to level and earn honor) opens the PvP window with Korrak's Revenge picked when you click it, and the Blackrock Depths tip opens the Raid Finder with Blackrock Depths picked.
+- WoW's Anniversary: the card now wears your faction's colors: Alliance blue, silver, and gold, or Horde crimson, ember, and gold. A holiday can now give each faction its own look.
+- WoW's Anniversary: the How to lines are grouped: getting started and quests, then badges and vendors, then world bosses, with the two queue lines (Korrak's Revenge and Blackrock Depths) together at the end.
+- Weekly Events: each Timewalking event's hover now names its "Path Through Time" quest, what it asks (five Timewalking dungeons for a cache with a piece of gear), and who gives it in Silvermoon City.
+- Pinkies Up! and Holiday Herald now play nicer together. The "Toast for every achievement" tooltip explains how to let Pinkies Up! cheer instead (or, if you don't have it yet, points you to it), and the Quiet preset says it hands achievement cheers over too. Everything still works with either addon on its own.
+- Holiday Herald now shares two small helpers other addons can ask: whether it is celebrating an achievement itself, and whether it is handling the everyday achievement toasts.
+
+### Fixed
+- Folding a section (How to, Secrets) now only folds it on that holiday's card. Each holiday remembers its own, so folding How to on one holiday no longer hides it on every other. Sections start unfolded once after this update.
+- The "Daily reset time" setting's tooltip now says the line is at the top of the popup.
+- WoW's Anniversary: removed "More Armor Scraps" from the daily quests, since it isn't part of the event. The Daily quests line now counts Celebrate Good Fun! and A Time to Reflect.
+
 ## v1.6.15
 
 ### New

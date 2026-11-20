@@ -24,7 +24,7 @@ local DB_DEFAULTS = {
     showWeekly   = true,
     microChat    = true,
     showMinimap  = true,
-    achievementToast = true,   -- a small toast for every achievement
+    achievementToast = true,   -- a small toast for every achievement (Pinkies Up! reads this setting; don't rename it)
     showTradingPost  = true,   -- Trading Post reminder under Weekly Events
     timeDisplay  = "realm",    -- start/end times: "realm", "local", or "both"
     showReset    = true,       -- "Daily reset: ..." line under the holiday cards
@@ -356,6 +356,76 @@ local function OpenBrawl()
     end)
 end
 
+-- Opens the PvP window on Bonus Battlegrounds with Korrak's Revenge picked.
+-- That entry sits in one of the Brawl-style slots, so it's found by its own text,
+-- not by position. If it isn't there, the window just opens on the right list.
+local function OpenKorraksRevenge()
+    if not PVPUIFrame and C_AddOns and C_AddOns.LoadAddOn then pcall(C_AddOns.LoadAddOn, "Blizzard_PVPUI") end
+    if PVEFrame_ShowFrame and HonorFrame then
+        pcall(PVEFrame_ShowFrame, "PVPUIFrame", HonorFrame)
+    elseif TogglePVPUI then
+        pcall(TogglePVPUI)
+    end
+    C_Timer.After(0, function()
+        if HonorFrame_SetType then pcall(HonorFrame_SetType, HonorFrame, "bonus") end
+        local bonus = HonorFrame and HonorFrame.BonusFrame
+        if not (bonus and HonorFrameBonusFrame_SelectButton) then return end
+        for _, key in ipairs({ "BrawlButton2", "BrawlButton" }) do
+            local button = bonus[key]
+            if button and button.GetRegions then
+                for _, region in ipairs({ button:GetRegions() }) do
+                    local ok, text = pcall(function() return region.GetText and region:GetText() end)
+                    if ok and type(text) == "string" and text:find("Korrak", 1, true) then
+                        pcall(HonorFrameBonusFrame_SelectButton, button)
+                        return
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- Opens the Raid Finder with a raid picked (an ID from the Raid Finder list).
+-- Like the other shortcuts, you still click the queue button yourself.
+local function OpenRaidFinder(raidID)
+    if PVEFrame_ShowFrame and RaidFinderFrame then
+        pcall(PVEFrame_ShowFrame, "GroupFinderFrame", RaidFinderFrame)
+    elseif PVEFrame_ShowFrame and LFDParentFrame then
+        pcall(PVEFrame_ShowFrame, "GroupFinderFrame", LFDParentFrame)
+    end
+    if type(raidID) == "number" and RaidFinderQueueFrame_SetRaid then
+        C_Timer.After(0, function()
+            pcall(RaidFinderQueueFrame_SetRaid, raidID)
+        end)
+    end
+end
+
+-- Every Timewalking event has its own quest: five Timewalking dungeons for a gear cache.
+-- All of them come from one person in Silvermoon City (this will likely change next expansion).
+local TIMEWALKING_QUESTS = {
+    ["Classic"]                = { id = 93607, name = "An Original Path Through Time" },
+    ["The Burning Crusade"]    = { id = 93608, name = "A Burning Path Through Time" },
+    ["Wrath of the Lich King"] = { id = 93610, name = "A Frozen Path Through Time" },
+    ["Cataclysm"]              = { id = 93611, name = "A Shattered Path Through Time" },
+    ["Mists of Pandaria"]      = { id = 93612, name = "A Shrouded Path Through Time" },
+    ["Warlords of Draenor"]    = { id = 93613, name = "A Savage Path Through Time" },
+    ["Legion"]                 = { id = 93614, name = "A Fel Path Through Time" },
+    ["Battle for Azeroth"]     = { id = 93627, name = "A Scarred Path Through Time" },
+    ["Shadowlands"]            = { id = 93628, name = "A Shadowed Path Through Time" },
+    ["Dragonflight"]           = { id = 93497, name = "A Soaring Path Through Time" },
+}
+local TIMEWALKING_GIVER = "Archmage Aethas Sunreaver in Silvermoon City"
+
+-- Which quest goes with this week's Timewalking line, if we know it
+local function TimewalkingQuestFor(item)
+    local expansion = item.expansion
+    if not expansion then
+        local text = ((item.title or "") .. " " .. (item.description or "")):lower()
+        if text:find("classic", 1, true) or text:find("vanilla", 1, true) then expansion = "Classic" end
+    end
+    return expansion and TIMEWALKING_QUESTS[expansion] or nil
+end
+
 -- The Timewalking entry in the Dungeon Finder's list, if there is one this week
 local function TimewalkingDungeonID()
     if not (GetNumRandomDungeons and GetLFGRandomDungeonInfo) then return nil end
@@ -519,6 +589,15 @@ end
 local function PrepareData()
     for key, data in pairs(HH.Holidays) do
         data.key = key
+        -- A holiday can wear different colors per faction:
+        -- factionColors = { Alliance = { ... }, Horde = { ... } } is laid over its colors.
+        local override = data.factionColors and data.factionColors[UnitFactionGroup("player") or ""]
+        if override and data.colors then
+            local merged = {}
+            for k, v in pairs(data.colors) do merged[k] = v end
+            for k, v in pairs(override) do merged[k] = v end
+            data.colors = merged
+        end
         for field, kind in pairs(LIST_KINDS) do
             if data[field] then data[field] = Normalize(data[field], kind) end
         end
@@ -1080,54 +1159,62 @@ local function BuildLines(item)
         }
     end
 
-    -- Daily quests: a checklist that resets each day.
-    -- An entry can list several quest IDs (quests = {...}) when any one of them counts.
-    local function DailyDone(quest)
+    -- Quest checklists (daily or weekly). An entry can list several quest IDs
+    -- (quests = {...}) when any one of them counts.
+    -- account = true: a once-per-Warband quest, done for every character once any one has done it
+    local function QuestDone(quest)
         for _, id in ipairs(quest.quests or { quest.quest }) do
             if C_QuestLog.IsQuestFlaggedCompleted(id) then return true end
+            if quest.account and C_QuestLog.IsQuestFlaggedCompletedOnAccount then
+                local ok, flagged = pcall(C_QuestLog.IsQuestFlaggedCompletedOnAccount, id)
+                if ok and flagged then return true end
+            end
         end
         return false
     end
-    local dailies = {}
-    for _, quest in ipairs(data.dailies or {}) do
-        if ForMyFaction(quest) then dailies[#dailies + 1] = quest end
-    end
-    if #dailies > 0 then
+    local function AddQuestList(list, opts)
+        local quests = {}
+        for _, quest in ipairs(list or {}) do
+            if ForMyFaction(quest) then quests[#quests + 1] = quest end
+        end
+        if #quests == 0 then return end
         local active = (item.daysAway == 0 and item.started ~= false)
         local doneCount = 0
-        for _, quest in ipairs(dailies) do
-            if active and DailyDone(quest) then doneCount = doneCount + 1 end
+        for _, quest in ipairs(quests) do
+            if active and QuestDone(quest) then doneCount = doneCount + 1 end
         end
-        local allDone = active and doneCount == #dailies
+        local allDone = active and doneCount == #quests
         local spec = {
             icon = ICONS.daily,
-            text = "Daily quests" .. (active and "" or ("\n" .. Color(GRAY, "Open when the holiday starts"))),
-            right = Color(allDone and GRAY or colors.main, active and (doneCount .. " of " .. #dailies) or (#dailies .. " quests")),
+            text = opts.heading .. (active and "" or ("\n" .. Color(GRAY, "Open when the holiday starts"))),
+            right = Color(allDone and GRAY or colors.main, active and (doneCount .. " of " .. #quests) or (#quests .. " quests")),
             tooltip = function(tt)
-                tt:AddLine(name .. ": daily quests", Hex(colors.main))
+                tt:AddLine(name .. ": " .. opts.tooltipTitle, Hex(colors.main))
                 local lastGroup
-                for _, quest in ipairs(dailies) do
+                for _, quest in ipairs(quests) do
                     if quest.group and quest.group ~= lastGroup then
                         tt:AddLine(" ")
                         tt:AddLine(quest.group, Hex(colors.accent))
                         lastGroup = quest.group
                     end
-                    local doneToday = active and DailyDone(quest)
-                    if doneToday then
-                        tt:AddDoubleLine(quest.name, "done today", 0.55, 0.52, 0.47, 0.55, 0.52, 0.47)
+                    local doneNow = active and QuestDone(quest)
+                    if doneNow then
+                        tt:AddDoubleLine(quest.name, opts.doneWord, 0.55, 0.52, 0.47, 0.55, 0.52, 0.47)
                     else
                         tt:AddDoubleLine(quest.name, quest.giver or "", 1, 1, 1, 0.72, 0.68, 0.61)
                         if quest.where then tt:AddLine("   " .. quest.where, 0.72, 0.68, 0.61, true) end
                     end
                 end
-                if data.dailyNote then
+                if opts.note then
                     tt:AddLine(" ")
-                    tt:AddLine(data.dailyNote, 0.72, 0.68, 0.61, true)
+                    tt:AddLine(opts.note, 0.72, 0.68, 0.61, true)
                 end
-                tt:AddLine(" ")
-                tt:AddLine("Resets with the daily reset.", 0.55, 0.52, 0.47, true)
+                if opts.footer then
+                    tt:AddLine(" ")
+                    tt:AddLine(opts.footer, 0.55, 0.52, 0.47, true)
+                end
             end,
-            doneLabel = "Today's dailies",
+            doneLabel = opts.doneLabel,
         }
         hasGoals = true
         if allDone then
@@ -1137,6 +1224,14 @@ local function BuildLines(item)
             toGet[#toGet + 1] = spec
         end
     end
+    AddQuestList(data.dailies, {
+        heading = "Daily quests", tooltipTitle = "daily quests", doneWord = "done today",
+        doneLabel = "Today's dailies", note = data.dailyNote, footer = "Resets with the daily reset.",
+    })
+    AddQuestList(data.weeklies, {
+        heading = "Weekly quests", tooltipTitle = "weekly quests", doneWord = "done this week",
+        doneLabel = "This week's quests", note = data.weeklyNote,
+    })
 
     -- Timed events, like a world quest that runs for part of every hour.
     -- Asks the game for the time left; away from the zone it works it out from the clock.
@@ -1281,6 +1376,10 @@ local function BuildLines(item)
                 icon = extra.warning and ICONS.boss or ICONS.tip,
                 text = Color(extra.warning and "FF6B6B" or "C9C1B1", extra.short),
                 tooltip = extra.hover and TextTooltip(extra.title or (name .. " tip"), colors, extra.hover),
+                -- click = "korrak" or { raid = <Raid Finder ID> }: a shortcut to the queue window
+                onClick = extra.click == "korrak" and OpenKorraksRevenge
+                    or (type(extra.click) == "table" and extra.click.raid and function() OpenRaidFinder(extra.click.raid) end)
+                    or nil,
             }
         end
     end
@@ -1376,12 +1475,14 @@ local function BuildLines(item)
 
     -- Assemble sections
     local specs = {}
-    -- Sections can fold up to one line (click the heading); remembered across holidays and characters
+    -- Sections can fold up to one line (click the heading). Each holiday remembers its own
+    -- folded sections (key = holiday + section), shared across characters.
     -- A holiday can color each section heading (colors.sections = { toGet, howTo, secrets })
     local SECTION_KEYS = { ["Still to get"] = "toGet", ["How to"] = "howTo", ["Secrets"] = "secrets" }
     local function Section(title, list, foldable)
         if #list == 0 then return end
-        local folded = foldable and HolidayHeraldDB.folded[title]
+        local foldKey = name .. "|" .. title
+        local folded = foldable and HolidayHeraldDB.folded[foldKey]
         local sectionColor = colors.sections and colors.sections[SECTION_KEYS[title]]
         local header = { header = title, colors = colors, color = sectionColor }
         if foldable then
@@ -1389,10 +1490,10 @@ local function BuildLines(item)
             header.tooltip = function(tt)
                 tt:AddLine(title, Hex(colors.main))
                 tt:AddLine(folded and ("Click to show all " .. #list .. ".") or "Click to fold this section up.", 1, 1, 1, true)
-                tt:AddLine("Remembered for every holiday card.", 0.72, 0.68, 0.61, true)
+                tt:AddLine("Remembered for this holiday.", 0.72, 0.68, 0.61, true)
             end
             header.onClick = function()
-                HolidayHeraldDB.folded[title] = not folded or nil
+                HolidayHeraldDB.folded[foldKey] = not folded or nil
                 GameTooltip:Hide()
                 if HH.Rerender then HH.Rerender() end
             end
@@ -1922,6 +2023,18 @@ local function Render(items, sideWeekly)
                     tt:AddLine("Click: open the PvP window with this week's Brawl picked.", 1, 0.82, 0)
                 end
                 onClick = OpenBrawl
+            end
+            -- Timewalking: this event's quest and where to pick it up
+            local twQuest = isTimewalking and TimewalkingQuestFor(item)
+            if twQuest then
+                local base = tooltip
+                tooltip = function(tt)
+                    if base then base(tt) else tt:AddLine(item.title, Hex(DEFAULT_COLORS.main)) end
+                    tt:AddLine(" ")
+                    tt:AddLine(twQuest.name, Hex(DEFAULT_COLORS.accent))
+                    tt:AddLine("Complete five Timewalking dungeons for a cache with a piece of gear.", 0.72, 0.68, 0.61, true)
+                    tt:AddLine("Pick it up from " .. TIMEWALKING_GIVER .. ". Once per character each event.", 0.72, 0.68, 0.61, true)
+                end
             end
             y = y - PlaceLine(popup, { text = label, tooltip = tooltip, onClick = onClick }, 20 + xo, y, width - 8) - 2
         end
@@ -2576,19 +2689,41 @@ local function TeaToast(achievementID)
     })
 end
 
+-- The holiday whose meta achievement this is, if any
+local function MetaHolidayFor(achievementID)
+    for _, data in pairs(HH.Holidays) do
+        if data.meta and data.meta.holidayMeta == achievementID then return data end
+    end
+end
+
+-- Helpers for other addons (Pinkies Up! uses them). Both are plain globals, safe to call
+-- at any time, and they never error if Holiday Herald isn't finished loading.
+-- True only when Holiday Herald will really show its own celebration for this achievement
+-- (the Celebration toast setting is on and it's a holiday meta or the Violet Proto-Drake).
+function HolidayHerald_IsCelebrating(achievementID)
+    if not (HolidayHeraldDB and HolidayHeraldDB.toast) then return false end
+    if achievementID == 2144 then return true end
+    return MetaHolidayFor(achievementID) ~= nil
+end
+-- True when Holiday Herald is giving a toast for every other achievement.
+-- (Pinkies Up! also reads HolidayHeraldDB.achievementToast directly on older versions,
+-- so don't rename that setting.)
+function HolidayHerald_HandlesEverydayToasts()
+    return (HolidayHeraldDB and HolidayHeraldDB.achievementToast) and true or false
+end
+
 local function CelebrateAchievement(achievementID)
     if achievementID == 2144 then
         ShowToast(DEFAULT_COLORS, "What a Long, Strange Trip!",
             "Every holiday meta done. The Violet Proto-Drake is yours. Grats!", true)
         return
     end
-    for _, data in pairs(HH.Holidays) do
-        if data.meta and data.meta.holidayMeta == achievementID then
-            local colors = (HolidayHeraldDB.showThemes and data.colors) or DEFAULT_COLORS
-            ShowToast(colors, "Grats! You did all the things!",
-                AchievementName(achievementID) .. " complete. " .. (data.name or "This holiday") .. " is done for the drake.")
-            return
-        end
+    local data = MetaHolidayFor(achievementID)
+    if data then
+        local colors = (HolidayHeraldDB.showThemes and data.colors) or DEFAULT_COLORS
+        ShowToast(colors, "Grats! You did all the things!",
+            AchievementName(achievementID) .. " complete. " .. (data.name or "This holiday") .. " is done for the drake.")
+        return
     end
     -- Any other achievement gets the everyday toast
     TeaToast(achievementID)
@@ -2704,6 +2839,20 @@ local function GetBrandCategory()
     return category
 end
 
+-- Is Pinkies Up! installed and switched on? It can load after us, so ask the addon list
+-- (installed + enabled) instead of "already loaded". Wrapped so it can never break the panel.
+local function PinkiesUpInstalled()
+    local ok, result = pcall(function()
+        if C_AddOns and C_AddOns.DoesAddOnExist and C_AddOns.GetAddOnEnableState then
+            if not C_AddOns.DoesAddOnExist("PinkiesUp") then return false end
+            return C_AddOns.GetAddOnEnableState("PinkiesUp", UnitName("player")) > 0
+        end
+        local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+        return isLoaded and isLoaded("PinkiesUp") or false
+    end)
+    return ok and result and true or false
+end
+
 local function BuildSettings()
     local category, layout = Settings.RegisterVerticalLayoutSubcategory(GetBrandCategory(), "Holiday Herald")
     settingsCategory = category
@@ -2733,7 +2882,7 @@ local function BuildSettings()
             local container = Settings.CreateControlTextContainer()
             container:Add("all", "All on (alerts + sounds)", "Everything on, sounds included.")
             container:Add("visuals", "Visuals only (no sounds)", "All messages and toasts, no sounds.")
-            container:Add("quiet", "Quiet (popup + chat only)", "Just the popup and chat lines. No alerts or toasts.")
+            container:Add("quiet", "Quiet (popup + chat only)", "Just the popup and chat lines. No alerts or toasts. If you have Pinkies Up!, it takes over the achievement cheers.")
             if CurrentPreset() == "custom" then
                 container:Add("custom", "Custom (your own picks)", "You've changed individual settings below.")
             end
@@ -2787,7 +2936,7 @@ local function BuildSettings()
     Checkbox("showTradingPost", "Trading Post reminder",
         "Show the Trading Post and your Trader's Tender under Weekly Events. Click it to open the Traveler's Log.")
     Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly Events.")
-    Checkbox("showReset", "Daily reset time", "Show when daily quests reset, under the holiday cards.")
+    Checkbox("showReset", "Daily reset time", "Show when daily quests reset, at the top of the popup under the title.")
 
     Header("What the cards show")
     Checkbox("showMeta", "Meta achievement line", "Link to the holiday's part of the Violet Proto-Drake meta.")
@@ -2824,8 +2973,15 @@ local function BuildSettings()
     Header("Celebrations")
     Checkbox("toast", "Celebration toast", "A \"Grats!\" toast when you finish a holiday's meta achievement.")
     Checkbox("fanfare", "Celebration fanfare", "Play a fanfare with the celebration toast.")
-    Checkbox("achievementToast", "Toast for every achievement",
-        "A small toast from the tea-sipping herald whenever you earn any achievement.")
+    do
+        local tip = "A small toast from the tea-sipping herald for every achievement."
+        if PinkiesUpInstalled() then
+            tip = tip .. " Turn this off to let Pinkies Up! cheer instead. Holiday meta celebrations stay with Holiday Herald."
+        else
+            tip = tip .. " Want a different cheer? Pinkies Up! gives every achievement a funny grats. Install it, then turn this off to let it take over."
+        end
+        Checkbox("achievementToast", "Toast for every achievement", tip)
+    end
 end
 
 function HH.BuildSettings()
