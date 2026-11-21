@@ -60,4 +60,17 @@ Find them under **Options → AddOns → NerdyBertie → Holiday Herald**. A qui
 
 The AddOns and Options menus now group my addons together, so you can find them all under the NerdyBertie heading (minus plugins that depend on other addons, like Dive Bar Front Crawl for the Tortollan housing endeavor).
 
+## More from NerdyBertie
+
+If you enjoy Holiday Herald, feel free to check out my other addons!
+
+- [HandyNotes: Dive Bar Front Crawl](https://www.curseforge.com/wow/addons/handynotes-dive-bar-front-crawl): map pins for every underwater Tortollan dive bar in the Dive Bar Front Crawl housing endeavor
+- [HandyNotes: Seeking The Soulstones](https://www.curseforge.com/wow/addons/handynotes-seeking-the-soulstones): map pins for the soulstones in Outland for the Warlock Green Fire questchain
+- [ItemWatch & Shopping List](https://www.curseforge.com/wow/addons/itemwatch-bag-item-counter): track how many of an item you have toward a goal, with a recipe shopping list that counts your bags, bank and warband bank
+- [Boomkin Buff Watcher](https://www.curseforge.com/wow/addons/boomkin-buff-watcher): keeps Balance Druids on top of their Astral Power and Eclipse state
+- [Chum Chimes](https://www.curseforge.com/wow/addons/chumchimes): a friendly chime when guildies or friends are in your zone or nearby
+- [Pinkies Up!](https://www.curseforge.com/wow/addons/pinkies-up): achievement gratses for everyone, with 40-plus cute sayings
+
+Find them all by searching NerdyBertie on CurseForge, WoWInterface, WoWUp, or Wago.
+
 Enjoying Holiday Herald? Consider supporting me on [Ko-fi](https://ko-fi.com/nerdybertie). Thank you!
