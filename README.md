@@ -12,7 +12,7 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Daily quest checklist.** Holidays with dailies show how many you've done today, like "2 of 10," grouped by where you do them. Hover for who gives each quest and where. It resets with the daily reset, so you always know what's left. Holidays with weekly quests, like the WoW Anniversary, get a matching weekly line.
 - **Daily reset time.** A line at the top of the popup, right under the title, shows exactly when dailies reset, with a countdown on hover.
 - **Server time or your time.** Choose how start, end, and reset times are shown: server time (like the in-game calendar), your own time, or both side by side.
-- **Themed holiday cards.** Each holiday gets its own colors, title style, and icon, even in chat messages.
+- **Themed holiday cards.** Each holiday gets its own colors, title style, and icon, even in chat messages. The popup title changes colors with the seasons, with a little seasonal icon beside it.
 - **Collection tracking.** Mounts, toys, pets, transmog, drake armor manuscripts, ensembles, and achievements are checked against your collection. Collected items gray out, so you only see what you're missing.
 - **Housing decor shopping list.** Every piece of a holiday's decor in one hover, grouped by what it costs, with where to buy it. Pieces you already have turn gray.
 - **Holiday currency totals.** See how many Tricky Treats (and more to come) you'd need for one of everything you're still missing, next to how many your whole account has: every character's bags and banks plus the warband bank. Hover to see who has how many.
