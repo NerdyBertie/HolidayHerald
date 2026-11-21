@@ -296,6 +296,6 @@ HH.Holidays.Anniversary = {
         { teaser = "Secret: Druids have a shortcut to the dragons...",
           reveal = "If you've opened your Druid Class Hall in Legion, you can cast Dreamwalk from anywhere to reach the Emerald Dreamway. Its portals lead to Duskwood, Feralas, and the Hinterlands, where Emeriss, Ysondre, and Lethon wait. Cast it again while you're still in the Dreamway to head back to where you started. Cast it after taking a portal and it takes you back to the Dreamway instead, ready for the next dragon." },
         { teaser = "Secret: those missing crates are more than a chore...",
-          reveal = "Finding all 11 Celebration Crates earns Azeroth's Greatest Detective and the Detective title. That title is the key to starting a very long puzzle hunt that ends with a mount: Keys to Incognitro, the Indecipherable Felcycle. The anniversary is a good time to begin. Expect many steps and a guide or two." },
+          reveal = "Finding all 11 Celebration Crates earns Azeroth's Greatest Detective and the Detective title. That title is the key to starting a very long puzzle hunt that ends with a mount: Keys to Incognitro, the Indecipherable Felcycle. Once you have the title, the hunt isn't tied to the event, so you can take it on any time. Expect many steps and a guide or two." },
     },
 }

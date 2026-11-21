@@ -1,5 +1,16 @@
 # Holiday Herald
 
+## v1.6.17
+
+### New
+- The popup title now changes with the seasons, with a small icon beside it: a snowman and ice blue for winter, a pink flower and green, yellow, and pink for spring, a hula girl gnome and blue and gold for summer, and an autumn leaf and amber and russet for fall.
+- The daily reset line at the top of the popup is bolder, in a gold-to-light-yellow gradient, so it no longer blends in with the text around it.
+- A thin gold line under the daily reset line separates it from the holiday cards, since it applies to everything below.
+
+### Changed
+- Preview tools (after /herald debug on): /herald season winter, spring, summer, or fall shows that season's title; /herald season on its own goes back to the calendar.
+- WoW's Anniversary: the Detective title secret now says the puzzle hunt isn't tied to the event, so once you have the title you can take it on any time.
+
 ## v1.6.16
 
 ### New

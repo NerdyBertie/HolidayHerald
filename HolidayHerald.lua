@@ -1586,6 +1586,63 @@ local popupVersion = popup:CreateFontString(nil, "OVERLAY", "GameFontDisableSmal
 popupVersion:SetPoint("BOTTOMLEFT", popupTitle, "BOTTOMRIGHT", 6, 1)
 popupVersion:SetText(AddonVersion())
 
+-- The title wears the colors of the season, going by the month on the realm's calendar:
+-- winter (Dec-Feb), spring (Mar-May), summer (Jun-Aug), fall (Sep-Nov). A small icon
+-- sits beside it (file numbers; summer's is an item's icon). Kept in one table because
+-- Lua allows only about 200 local variables in a file.
+local Season = {
+    gradients = {
+        winter = { "7FB8F0", "EAF6FF" },      -- ice blue -> white
+        spring = { "5FC46E", "F5DF7A", "F6A6C9" },   -- leaf green -> soft yellow -> blossom pink
+        summer = { "3FB6F0", "FFD23F" },      -- sky blue -> sun gold
+        fall   = { "E8B04A", "B5532A" },      -- gold -> russet
+    },
+    icons = {
+        winter = 655957,                      -- snowman
+        spring = 237578,                      -- pink flower
+        summer = { item = 34249 },            -- Hula Girl Doll
+        fall   = 3636843,                     -- autumn leaf
+    },
+    ofMonth = { "winter", "winter", "spring", "spring", "spring", "summer",
+                "summer", "summer", "fall", "fall", "fall", "winter" },
+    preview = nil,                            -- set by /herald season <name> (debug)
+}
+
+function Season.Current()
+    if Season.preview then return Season.preview end
+    local now = C_DateAndTime and C_DateAndTime.GetCurrentCalendarTime and C_DateAndTime.GetCurrentCalendarTime()
+    local month = now and now.month or tonumber(date("%m"))
+    return Season.ofMonth[month or 0] or "fall"
+end
+
+local seasonIcon = popup:CreateTexture(nil, "ARTWORK")
+seasonIcon:SetSize(24, 24)
+seasonIcon:SetPoint("RIGHT", popupTitle, "LEFT", -6, 0)
+seasonIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+seasonIcon:Hide()
+
+local function UpdatePopupTitle()
+    local season = Season.Current()
+    popupTitle:SetText(GradientText("Holiday Herald", Season.gradients[season]))
+    local icon = Season.icons[season]
+    if type(icon) == "table" then
+        local ok, texture = pcall(function() return C_Item.GetItemIconByID(icon.item) end)
+        icon = ok and texture or nil
+    end
+    if icon then
+        seasonIcon:SetTexture(icon)
+        seasonIcon:Show()
+    else
+        seasonIcon:Hide()
+    end
+end
+
+-- A thin gold line under the daily reset line, because the reset applies to everything below
+local popupDivider = popup:CreateTexture(nil, "ARTWORK")
+popupDivider:SetHeight(1)
+popupDivider:SetColorTexture(0.89, 0.76, 0.48, 0.30)
+popupDivider:Hide()
+
 local closeButton = CreateFrame("Button", nil, popup, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", -6, -6)
 
@@ -1598,6 +1655,17 @@ local function ReleaseAll()
     for i = 1, headerCount do headerPool[i].text:Hide(); headerPool[i].hint:Hide(); headerPool[i].rule:Hide() end
     for i = 1, cardCount do cardPool[i]:Hide() end
     lineCount, headerCount, cardCount = 0, 0, 0
+end
+
+-- The daily reset line looks bolder: the same font with an outline
+local ResetLook = { font = GameFontHighlight, gradient = { "E3A43C", "FFE9A0" } }   -- gold -> light yellow
+do
+    local path, size = GameFontHighlight:GetFont()
+    if path and size and CreateFont then
+        local f = CreateFont("HolidayHeraldResetFont")
+        f:SetFont(path, size + 1, "OUTLINE")
+        ResetLook.font = f
+    end
 end
 
 local function NewLine()
@@ -1660,7 +1728,7 @@ local function PlaceLine(parent, spec, x, y, width)
         b:Show()
         return 16
     end
-    b.text:SetFontObject(GameFontHighlight)
+    b.text:SetFontObject(spec.bold and ResetLook.font or GameFontHighlight)
     b.text:SetTextColor(1, 1, 1)
     b.text:ClearAllPoints()
     b.right:SetText(spec.right or "")
@@ -1915,6 +1983,8 @@ end
 
 local function Render(items, sideWeekly)
     ReleaseAll()
+    UpdatePopupTitle()
+    popupDivider:Hide()
     lastItems = items
     pendingData = false
     local y = -46
@@ -1950,7 +2020,8 @@ local function Render(items, sideWeekly)
             local hours, minutes = math.floor(seconds / 3600), math.floor((seconds % 3600) / 60)
             y = y - PlaceLine(popup, {
                 center = true,
-                text = "|T" .. ICONS.reset .. ":14|t " .. Color(SOFT, "Daily reset: " .. when),
+                text = "|T" .. ICONS.reset .. ":14|t " .. GradientText("Daily reset: " .. when, ResetLook.gradient),
+                bold = true,
                 tooltip = function(tt)
                     tt:AddLine("Daily reset", Hex(DEFAULT_COLORS.main))
                     tt:AddLine(("In %dh %02dm."):format(hours, minutes), 1, 1, 1)
@@ -1958,6 +2029,11 @@ local function Render(items, sideWeekly)
                     tt:AddLine("Change how times are shown under Start and end times in the settings.", 0.55, 0.52, 0.47, true)
                 end,
             }, 20, y, popup:GetWidth() - 40) - 4      -- the full width of the popup, so it centers across all of it
+            popupDivider:ClearAllPoints()
+            popupDivider:SetPoint("TOPLEFT", popup, "TOPLEFT", 20, y)
+            popupDivider:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -20, y)
+            popupDivider:Show()
+            y = y - 6
         end
     end
     local topY = y      -- where the cards (and a Weekly Events side column) start
@@ -3088,6 +3164,19 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
     elseif cmd == "weekly" then
         HolidayHeraldDB.showWeekly = not HolidayHeraldDB.showWeekly
         Print("weekly events " .. (HolidayHeraldDB.showWeekly and "shown." or "hidden."))
+    elseif cmd == "season" then
+        if not HolidayHeraldDB.debug then
+            Print("type /herald debug on first.")
+            return
+        end
+        if arg1 and Season.gradients[arg1] then
+            Season.preview = arg1
+            Print("previewing " .. arg1 .. ". Type /herald season to go back to the calendar.")
+        else
+            Season.preview = nil
+            Print("title colors are back to following the calendar.")
+        end
+        ShowPopup()
     elseif cmd == "debug" then
         HolidayHeraldDB.debug = (arg1 == "on")
         Print("preview commands " .. (HolidayHeraldDB.debug and "unlocked." or "locked."))
@@ -3131,6 +3220,6 @@ SlashCmdList.HOLIDAYHERALD = function(msg)
             if data then ShortAlert({ title = data.name, data = data, daysAway = 0 }) end
         end
     else
-        Print("commands: /herald, /herald options, /herald resetpos, /herald weekly, /herald debug on|off, /herald preview <holiday> [soon|done], /herald alert <holiday>, /herald start [holiday], /herald reset")
+        Print("commands: /herald, /herald options, /herald resetpos, /herald weekly, /herald debug on|off, /herald preview <holiday> [soon|done], /herald alert <holiday>, /herald start [holiday], /herald season [winter|spring|summer|fall], /herald reset")
     end
 end
