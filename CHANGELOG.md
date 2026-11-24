@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.6.18
+
+### Changed
+- Ready for the December 1 patch (12.1.7).
+
 ## v1.6.17
 
 ### New
