@@ -22,6 +22,7 @@ local DB_DEFAULTS = {
     showSecrets  = true,
     showThemes   = true,
     showWeekly   = true,
+    showDrops    = true,       -- Twitch Drop line under Weekly Events
     microChat    = true,
     showMinimap  = true,
     achievementToast = true,   -- a small toast for every achievement (Pinkies Up! reads this setting; don't rename it)
@@ -1927,6 +1928,68 @@ local function OpenTravelersLog()
     if not ok and ToggleEncounterJournal then ToggleEncounterJournal() end
 end
 
+-- Twitch Drops: HH.TwitchDrops lists them with real-world (UTC) times. These helpers turn
+-- one into realm-calendar moments, so it lines up with everything else in the popup.
+function HH.DropWindow(drop)
+    local calNow = ToEpoch(C_DateAndTime.GetCurrentCalendarTime())
+    if not calNow or not GetServerTime then return nil end
+    -- How far realm time is from UTC, rounded to 15 minutes
+    local offset = math.floor((calNow - GetServerTime()) / 900 + 0.5) * 900
+    return calNow, drop.startUTC + offset, drop.endUTC + offset
+end
+
+function HH.CalTable(epoch)
+    local t = date("*t", epoch)
+    return { year = t.year, month = t.month, monthDay = t.day, hour = t.hour, minute = t.min }
+end
+
+-- Drops that are on now, or start within the look-ahead days
+function HH.DropsToShow()
+    local list = {}
+    if not HolidayHeraldDB.showDrops then return list end
+    for _, drop in ipairs(HH.TwitchDrops or {}) do
+        local now, s, e = HH.DropWindow(drop)
+        if now and now < e then
+            local on = now >= s
+            if on or (s - now) <= HolidayHeraldDB.lookahead * 86400 then
+                list[#list + 1] = { drop = drop, on = on, start = s, finish = e }
+            end
+        end
+    end
+    return list
+end
+
+function HH.DropLine(entry)
+    local drop = entry.drop
+    local label
+    if entry.on then
+        local ends = FormatEnd(HH.CalTable(entry.finish))
+        label = Color("33FF33", "Now: ") .. Color(SOFT, "Twitch Drop, " .. drop.name .. (ends and (", ends " .. ends) or ""))
+    else
+        label = Color("FFD100", "Starts " .. (FormatEnd(HH.CalTable(entry.start)) or "soon") .. ": ") .. Color(SOFT, "Twitch Drop, " .. drop.name)
+    end
+    return {
+        text = label,
+        tooltip = function(tt)
+            tt:AddLine("Twitch Drop: " .. drop.name, Hex(DEFAULT_COLORS.main))
+            if drop.kind then tt:AddLine(drop.kind, 0.72, 0.68, 0.61) end
+            tt:AddLine(" ")
+            tt:AddLine(("Watch %d hours of World of Warcraft on Twitch while the drop is on, on any channel with drops enabled."):format(drop.hours), 1, 1, 1, true)
+            tt:AddLine(" ")
+            tt:AddLine("Before you watch", Hex(DEFAULT_COLORS.main))
+            tt:AddLine("Link your Twitch account at account.battle.net/connections. Claim the reward on Twitch, then log into the Battle.net region you want it on. It can take up to 24 hours to arrive.", 1, 1, 1, true)
+            if drop.vendors then
+                tt:AddLine(" ")
+                tt:AddLine("More copies, for gold", Hex(DEFAULT_COLORS.main))
+                tt:AddLine("Once you've claimed one, you can buy more from:", 0.72, 0.68, 0.61, true)
+                for _, v in ipairs(drop.vendors) do
+                    tt:AddDoubleLine(v[1], v[2], 1, 1, 1, 0.72, 0.68, 0.61)
+                end
+            end
+        end,
+    }
+end
+
 local function TradingPostLine()
     local today = C_DateAndTime.GetCurrentCalendarTime()
     local newThisWeek = today.monthDay <= 7
@@ -1981,7 +2044,7 @@ local function PlaceCards(list, y, columns, columnWidth)
     return math.min(columnY[1], columnY[2])
 end
 
-local function Render(items, sideWeekly)
+local function Render(items, sideWeekly)   -- sideWeekly = false keeps Weekly Events below the cards
     ReleaseAll()
     UpdatePopupTitle()
     popupDivider:Hide()
@@ -2000,11 +2063,14 @@ local function Render(items, sideWeekly)
         end
     end
 
+    local drops = HH.DropsToShow()
+    local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost or #drops > 0
+
     -- Three or more cards: go wide, with two columns of cards
     local columns = (#holidays + #micro >= TWO_COLUMN_AT) and 2 or 1
     local columnWidth = POPUP_WIDTH - 32
-    -- Too tall for the screen with one column of cards: Weekly Events moves to a column on the right
-    local side = sideWeekly and columns == 1
+    -- Weekly Events sits in its own column beside the cards when the screen is wide enough; otherwise below them
+    local side = sideWeekly ~= false and showWeeklySection and (#holidays + #micro > 0) and (columns + 1) * columnWidth + columns * COLUMN_GAP + 32 <= UIParent:GetWidth() / (popup:GetScale() or 1) * 0.98
     popup:SetWidth((columns + (side and 1 or 0)) * columnWidth + (columns + (side and 1 or 0) - 1) * COLUMN_GAP + 32)
     local width = columns * columnWidth + (columns - 1) * COLUMN_GAP
 
@@ -2040,24 +2106,26 @@ local function Render(items, sideWeekly)
 
     local hint = Color(GRAY, "Hover any line for details")
     if #holidays > 0 then
-        y = PlaceHeader("Holidays", y, hint, 20, side and (columnWidth - 8) or nil)
+        y = PlaceHeader("Holidays", y, hint, 20, side and (columns * columnWidth + (columns - 1) * COLUMN_GAP - 8) or nil)
         hint = nil
         y = PlaceCards(holidays, y, columns, columnWidth)
     end
 
     if #micro > 0 then
-        y = PlaceHeader("Micro-holidays", y, hint, 20, side and (columnWidth - 8) or nil)
+        y = PlaceHeader("Micro-holidays", y, hint, 20, side and (columns * columnWidth + (columns - 1) * COLUMN_GAP - 8) or nil)
         y = PlaceCards(micro, y, columns, columnWidth)
     end
 
     -- The daily reset line and the Weekly Events section. xo shifts it right when it
     -- sits in its own column; returns the y below its last line.
-    local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost
     local function PlaceWeekly(y, xo, width)
     if showWeeklySection then
         y = PlaceHeader("Weekly Events", y, nil, 20 + xo, xo > 0 and (width - 8) or nil)
         if HolidayHeraldDB.showTradingPost then
             y = y - PlaceLine(popup, TradingPostLine(), 20 + xo, y, width - 8) - 2
+        end
+        for _, entry in ipairs(drops) do
+            y = y - PlaceLine(popup, HH.DropLine(entry), 20 + xo, y, width - 8) - 2
         end
     end
     if #weekly > 0 and HolidayHeraldDB.showWeekly then
@@ -2120,7 +2188,7 @@ local function Render(items, sideWeekly)
 
     if side then
         -- Cards on the left, the weekly section in its own column on the right
-        local sideY = PlaceWeekly(topY, columnWidth + COLUMN_GAP, columnWidth)
+        local sideY = PlaceWeekly(topY, columns * (columnWidth + COLUMN_GAP), columnWidth)
         y = math.min(y, sideY)
     else
         y = PlaceWeekly(y, 0, width)
@@ -2128,12 +2196,6 @@ local function Render(items, sideWeekly)
 
     if #holidays == 0 and #micro == 0 and not showWeeklySection then
         y = y - PlaceLine(popup, { text = Color(SOFT, "No holidays or events in the next " .. HolidayHeraldDB.lookahead .. " days.") }, 20, y, width - 8)
-    end
-
-    -- Taller than the screen with one column of cards: redo it with Weekly Events beside them
-    if not sideWeekly and columns == 1 and showWeeklySection
-        and (-y + 18) > (UIParent:GetHeight() * 0.9) / (popup:GetScale() or 1) then
-        return Render(items, true)
     end
 
     popup:SetHeight(-y + 18)
@@ -2147,6 +2209,11 @@ local function Render(items, sideWeekly)
             if now and moment > now then
                 soonest = math.min(soonest or moment, moment)
             end
+        end
+    end
+    for _, entry in ipairs(drops) do
+        for _, moment in ipairs({ entry.start, entry.finish }) do
+            if now and moment > now then soonest = math.min(soonest or moment, moment) end
         end
     end
     refreshToken = (refreshToken or 0) + 1
@@ -2276,7 +2343,16 @@ end
 local function RebuildPins()
     wipe(pinLookup)
     if not HolidayHeraldDB.showPins then return end
-    for _, data in ipairs(activeHolidayData) do
+    -- A Twitch Drop that's on gets its pins too (shown as "Twitch Drop")
+    local sources = {}
+    for _, data in ipairs(activeHolidayData) do sources[#sources + 1] = data end
+    for _, drop in ipairs(HH.TwitchDrops or {}) do
+        local now, s, e = HH.DropWindow(drop)
+        if now and now >= s and now < e and drop.pins then
+            sources[#sources + 1] = { name = "Twitch Drop", pins = drop.pins }
+        end
+    end
+    for _, data in ipairs(sources) do
         for _, pin in ipairs(data.pins or {}) do
             if ForMyFaction(pin) then
                 AddPin(pin.map, pin.x, pin.y, { pin = pin, data = data })
@@ -2407,6 +2483,14 @@ local function NoteScan(items)
         -- Also wake up when a holiday that's on ends, so its map pins go away right then
         if item.data and item.daysAway == 0 and item.started ~= false and item.endEpoch then
             nextStartAt = math.min(nextStartAt or item.endEpoch, item.endEpoch)
+        end
+    end
+    for _, drop in ipairs(HH.TwitchDrops or {}) do
+        local now, s, e = HH.DropWindow(drop)
+        if now then
+            for _, moment in ipairs({ s, e }) do
+                if moment > now then nextStartAt = math.min(nextStartAt or moment, moment) end
+            end
         end
     end
     HH.RefreshPins()
@@ -3012,6 +3096,7 @@ local function BuildSettings()
     Checkbox("showTradingPost", "Trading Post reminder",
         "Show the Trading Post and your Trader's Tender under Weekly Events. Click it to open the Traveler's Log.")
     Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly Events.")
+    Checkbox("showDrops", "Twitch Drops", "Show a Twitch Drop under Weekly Events while one is on, or about to start.")
     Checkbox("showReset", "Daily reset time", "Show when daily quests reset, at the top of the popup under the title.")
 
     Header("What the cards show")

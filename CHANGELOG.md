@@ -1,5 +1,15 @@
 # Holiday Herald
 
+## v1.6.20
+
+### New
+- Twitch Drops: while one is on, or about to start, it shows under Weekly Events with its dates. Hover for how to earn it, linking your accounts, and where to buy more copies. The first one is the Cuddly Seafoam Grrgle housing decor item (December 1 to December 29).
+- Map pin (with HandyNotes) for Dennia Silvertongue in Silvermoon City, who sells more copies once you've claimed one. It shows only while the drop is on.
+- A new "Twitch Drops" checkbox in the settings.
+
+### Changed
+- Weekly Events now sits in its own column on the right of the cards, so it can't run off the bottom of the screen with several holidays on. On a narrow screen it stays below the cards.
+
 ## v1.6.19
 
 ### New
