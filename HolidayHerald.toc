@@ -1,11 +1,10 @@
-## Interface: 120100, 120105, 120107
+## Interface: 120100, 120105
 ## Title: Holiday Herald
 ## Notes: Pops up a themed reminder of current and upcoming holidays, what you can still collect, tips, and secrets.
 ## Author: NerdyBertie
 ## Category: NerdyBertie
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\HolidayHerald\Media\icon
-## OptionalDeps: HandyNotes, TomTom
 ## SavedVariables: HolidayHeraldDB
 ## SavedVariablesPerCharacter: HolidayHeraldCharDB
 ## AddonCompartmentFunc: HolidayHerald_OnAddonCompartmentClick
