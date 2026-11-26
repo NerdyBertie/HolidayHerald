@@ -1,5 +1,16 @@
 # Holiday Herald
 
+## v1.6.19
+
+### New
+- Pilgrim's Bounty map pins (with HandyNotes): the Bountiful Table by each of your faction's capital cities, where the vendor, the quest givers, and a cooking fire all stand together. Each pin says which vendor is there and what main ingredient they sell.
+- Pilgrim's Bounty tips: the easiest daily (Sharing a Bountiful Feast, no cooking needed), what the daily reward bag can hold, Turkey Lurkey and its Turkey Shooters, and where to find Wild Turkeys for your faction.
+- The weekly quests hover now ends with "Resets with the weekly reset," like the daily one.
+
+### Changed
+- Pilgrim's Bounty dailies: you pick one reward for each (a piece of the Pilgrim's outfit or the reward bag), and you buy the ingredients and cook the dishes yourself. The card used to say otherwise.
+- Pilgrim's Bounty secret: a tip for finishing Classic Cooking 300 before Winter Veil, with the recipes and where to catch the fish.
+
 ## v1.6.18
 
 ### Changed

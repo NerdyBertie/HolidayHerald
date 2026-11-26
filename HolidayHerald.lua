@@ -1230,7 +1230,7 @@ local function BuildLines(item)
     })
     AddQuestList(data.weeklies, {
         heading = "Weekly quests", tooltipTitle = "weekly quests", doneWord = "done this week",
-        doneLabel = "This week's quests", note = data.weeklyNote,
+        doneLabel = "This week's quests", note = data.weeklyNote, footer = "Resets with the weekly reset.",
     })
 
     -- Timed events, like a world quest that runs for part of every hour.
