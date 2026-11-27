@@ -1917,14 +1917,13 @@ end
 
 -- Opens the Adventure Guide on the Traveler's Log, where Trader's Tender is earned
 local function OpenTravelersLog()
+    -- Opens the Adventure Guide the plain way. Switching to the Traveler's Log tab is left to
+    -- the player's own click: pressing that tab from an addon is blocked by the game.
     local ok = pcall(function()
         if not EncounterJournal and C_AddOns and C_AddOns.LoadAddOn then
             C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
         end
-        ShowUIPanel(EncounterJournal)
-        if EncounterJournal.MonthlyActivitiesTab and EJ_ContentTab_Select then
-            EJ_ContentTab_Select(EncounterJournal.MonthlyActivitiesTab:GetID())
-        end
+        if not (EncounterJournal and EncounterJournal:IsShown()) then ToggleEncounterJournal() end
     end)
     if not ok and ToggleEncounterJournal then ToggleEncounterJournal() end
 end
@@ -2073,7 +2072,7 @@ local function TradingPostLine()
             tt:AddLine("Earning Trader's Tender", Hex(DEFAULT_COLORS.main))
             tt:AddLine("Complete activities in the Traveler's Log, in the Adventure Guide. New activities and new Trading Post items arrive on the 1st of every month, and unspent Tender carries over.", 1, 1, 1, true)
             tt:AddLine(" ")
-            tt:AddLine("Click to open the Traveler's Log.", 0.72, 0.68, 0.61)
+            tt:AddLine("Click: open the Adventure Guide. Then pick the Traveler's Log tab.", 1, 0.82, 0)
             AddWayTip(tt)
         end,
         onClick = OpenTravelersLog,
@@ -3158,7 +3157,7 @@ local function BuildSettings()
     end, "Move the Holiday Herald popup back to the middle of the screen.")
     Checkbox("showThemes", "Holiday color themes", "Give each holiday card its own colors.")
     Checkbox("showTradingPost", "Trading Post reminder",
-        "Show the Trading Post and your Trader's Tender under Weekly and Daily Events. Click it to open the Traveler's Log.")
+        "Show the Trading Post and your Trader's Tender under Weekly and Daily Events. Click it to open the Adventure Guide.")
     Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly and Daily Events.")
     Checkbox("showDrops", "Twitch Drops", "Show a Twitch Drop under Weekly and Daily Events while one is on, or about to start.")
     Checkbox("showDelves", "Bountiful Delves", "Show which Delves are Bountiful today under Weekly and Daily Events. Click it to open the Journeys page.")

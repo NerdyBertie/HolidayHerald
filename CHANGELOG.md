@@ -1,5 +1,10 @@
 # Holiday Herald
 
+## v1.6.22
+
+### Fixed
+- Clicking the Trading Post line could leave a "tried to call SetTab()" message in error logs. It now opens the Adventure Guide and you pick the Traveler's Log tab yourself.
+
 ## v1.6.21
 
 ### New
