@@ -22,11 +22,12 @@ local DB_DEFAULTS = {
     showSecrets  = true,
     showThemes   = true,
     showWeekly   = true,
-    showDrops    = true,       -- Twitch Drop line under Weekly Events
+    showDrops    = true,       -- Twitch Drop line under Weekly and Daily Events
+    showDelves   = true,       -- Bountiful Delves line under Weekly and Daily Events
     microChat    = true,
     showMinimap  = true,
     achievementToast = true,   -- a small toast for every achievement (Pinkies Up! reads this setting; don't rename it)
-    showTradingPost  = true,   -- Trading Post reminder under Weekly Events
+    showTradingPost  = true,   -- Trading Post reminder under Weekly and Daily Events
     timeDisplay  = "realm",    -- start/end times: "realm", "local", or "both"
     showReset    = true,       -- "Daily reset: ..." line under the holiday cards
     popupOnStart = true,       -- show the popup again on the day a holiday starts
@@ -1990,6 +1991,62 @@ function HH.DropLine(entry)
     }
 end
 
+-- Bountiful Delves: which Delves are Bountiful today, asked of the game (Blizzard's own
+-- map data for Quel'Thalas, one lookup, names de-duplicated). Remembered until the next
+-- daily reset, so it costs nothing while the popup is open. Returns nil if the game
+-- hasn't loaded the data yet.
+function HH.BountifulDelves()
+    local cache = HH.delveCache
+    if cache and GetServerTime() < cache.expires then return cache.names end
+    if not (C_AreaPoiInfo and C_AreaPoiInfo.GetDelvesForMap and C_AreaPoiInfo.GetAreaPOIInfo) then return nil end
+    local ok, ids = pcall(C_AreaPoiInfo.GetDelvesForMap, 2537)
+    if not ok or not ids or #ids == 0 then return nil end
+    local names, seen = {}, {}
+    for _, id in ipairs(ids) do
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(2537, id)
+        if not info then return nil end                    -- not all loaded yet: try again shortly
+        if info.atlasName == "delves-bountiful" and info.name and not seen[info.name] then
+            seen[info.name] = true
+            names[#names + 1] = info.name
+        end
+    end
+    table.sort(names)
+    local untilReset = (C_DateAndTime.GetSecondsUntilDailyReset and C_DateAndTime.GetSecondsUntilDailyReset()) or 1800
+    HH.delveCache = { names = names, expires = GetServerTime() + math.max(60, math.min(untilReset, 6 * 3600)) }
+    return names
+end
+
+-- Opens the Adventure Guide on its Journeys page (the Delves card is one click from there)
+function HH.OpenJourneys()
+    local ok = pcall(function()
+        if not EncounterJournal and C_AddOns and C_AddOns.LoadAddOn then
+            C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
+        end
+        if not (EncounterJournal and EncounterJournal:IsShown()) then ToggleEncounterJournal() end
+        C_Timer.After(0.5, function()
+            if EncounterJournalJourneysTab and EncounterJournalJourneysTab.Click then
+                pcall(EncounterJournalJourneysTab.Click, EncounterJournalJourneysTab)
+            end
+        end)
+    end)
+    if not ok and ToggleEncounterJournal then ToggleEncounterJournal() end
+end
+
+function HH.DelveLine(names)
+    return {
+        text = Color("33FF33", "Bountiful Delves today: ") .. Color(SOFT, table.concat(names, ", ")),
+        tooltip = function(tt)
+            tt:AddLine("Bountiful Delves today", Hex(DEFAULT_COLORS.main))
+            for _, name in ipairs(names) do tt:AddLine(name, 1, 1, 1) end
+            tt:AddLine(" ")
+            tt:AddLine("Each Bountiful Delve has a bonus treasure chest at the end, opened with a Restored Coffer Key.", 0.72, 0.68, 0.61, true)
+            tt:AddLine(" ")
+            tt:AddLine("Click: open the Journeys page.", 1, 0.82, 0)
+        end,
+        onClick = HH.OpenJourneys,
+    }
+end
+
 local function TradingPostLine()
     local today = C_DateAndTime.GetCurrentCalendarTime()
     local newThisWeek = today.monthDay <= 7
@@ -2064,7 +2121,11 @@ local function Render(items, sideWeekly)   -- sideWeekly = false keeps Weekly Ev
     end
 
     local drops = HH.DropsToShow()
-    local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost or #drops > 0
+    local delves = HolidayHeraldDB.showDelves and HH.BountifulDelves()
+    -- The delve list can take a moment to load after login; ask again shortly
+    if HolidayHeraldDB.showDelves and not delves and C_AreaPoiInfo and C_AreaPoiInfo.GetDelvesForMap then pendingData = true end
+    local hasDelves = delves and #delves > 0
+    local showWeeklySection = (#weekly > 0 and HolidayHeraldDB.showWeekly) or HolidayHeraldDB.showTradingPost or #drops > 0 or hasDelves
 
     -- Three or more cards: go wide, with two columns of cards
     local columns = (#holidays + #micro >= TWO_COLUMN_AT) and 2 or 1
@@ -2120,9 +2181,12 @@ local function Render(items, sideWeekly)   -- sideWeekly = false keeps Weekly Ev
     -- sits in its own column; returns the y below its last line.
     local function PlaceWeekly(y, xo, width)
     if showWeeklySection then
-        y = PlaceHeader("Weekly Events", y, nil, 20 + xo, xo > 0 and (width - 8) or nil)
+        y = PlaceHeader("Weekly and Daily Events", y, nil, 20 + xo, xo > 0 and (width - 8) or nil)
         if HolidayHeraldDB.showTradingPost then
             y = y - PlaceLine(popup, TradingPostLine(), 20 + xo, y, width - 8) - 2
+        end
+        if hasDelves then
+            y = y - PlaceLine(popup, HH.DelveLine(delves), 20 + xo, y, width - 8) - 2
         end
         for _, entry in ipairs(drops) do
             y = y - PlaceLine(popup, HH.DropLine(entry), 20 + xo, y, width - 8) - 2
@@ -3094,9 +3158,10 @@ local function BuildSettings()
     end, "Move the Holiday Herald popup back to the middle of the screen.")
     Checkbox("showThemes", "Holiday color themes", "Give each holiday card its own colors.")
     Checkbox("showTradingPost", "Trading Post reminder",
-        "Show the Trading Post and your Trader's Tender under Weekly Events. Click it to open the Traveler's Log.")
-    Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly Events.")
-    Checkbox("showDrops", "Twitch Drops", "Show a Twitch Drop under Weekly Events while one is on, or about to start.")
+        "Show the Trading Post and your Trader's Tender under Weekly and Daily Events. Click it to open the Traveler's Log.")
+    Checkbox("showWeekly", "Weekly events", "List brawls, bonus events, and Timewalking under Weekly and Daily Events.")
+    Checkbox("showDrops", "Twitch Drops", "Show a Twitch Drop under Weekly and Daily Events while one is on, or about to start.")
+    Checkbox("showDelves", "Bountiful Delves", "Show which Delves are Bountiful today under Weekly and Daily Events. Click it to open the Journeys page.")
     Checkbox("showReset", "Daily reset time", "Show when daily quests reset, at the top of the popup under the title.")
 
     Header("What the cards show")

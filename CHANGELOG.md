@@ -1,5 +1,13 @@
 # Holiday Herald
 
+## v1.6.21
+
+### New
+- Bountiful Delves: the popup lists which Delves are Bountiful today. Hover for what the bonus chest needs, and click to open the Journeys page. It has its own "Bountiful Delves" checkbox in the settings.
+
+### Changed
+- The "Weekly Events" section is now called "Weekly and Daily Events".
+
 ## v1.6.20
 
 ### New

@@ -33,10 +33,11 @@ Built after missing Pirates' Day (and the Jolly Roger toy) five days after getti
 - **Micro-holidays.** Little holidays like The Great Gnomeregan Run get a chat line on the day and their own card.
 - **Weekly events.** PvP Brawls, bonus events, and Timewalking (with its expansion) listed in their own section. Click a Timewalking or Brawl event that's on now to open the right window, ready to queue. Hover a Timewalking event to see its "Path Through Time" quest and where to pick it up.
 - **Trading Post reminder.** See your Trader's Tender at a glance, get a heads-up when new items arrive on the 1st, and click to open the Traveler's Log.
-- **Twitch Drops.** When a Twitch Drop is on, or about to start, it shows under Weekly Events with its dates and what to do. Hover for how to earn it and where to buy more copies. With HandyNotes, the vendor gets a map pin while the drop is on. It has its own checkbox in the settings.
+- **Twitch Drops.** When a Twitch Drop is on, or about to start, it shows under Weekly and Daily Events with its dates and what to do. Hover for how to earn it and where to buy more copies. With HandyNotes, the vendor gets a map pin while the drop is on. It has its own checkbox in the settings.
+- **Bountiful Delves.** See which Delves are Bountiful today, right in the popup. Hover for what the bonus chest needs, and click to open the Journeys page. It has its own checkbox in the settings.
 - **Celebration toast.** Finish a holiday's meta and the NerdyBertie herald gives you a thumbs-up. (I call her Matilda) <3
 - **Achievement toasts.** Every achievement you earn gets a little cheer from a very dapper herald. Prefer a different cheer? Turn this off and Pinkies Up! can take over.
-- **Tidy layout.** Weekly Events sits in its own column on the right, so nothing runs off the bottom of your screen (on a narrow screen it drops below the cards). With three or more holidays at once, the cards switch to two columns.
+- **Tidy layout.** Weekly and Daily Events sits in its own column on the right, so nothing runs off the bottom of your screen (on a narrow screen it drops below the cards). With three or more holidays at once, the cards switch to two columns.
 
 ## Holidays covered
 
